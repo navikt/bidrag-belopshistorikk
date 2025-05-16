@@ -8,7 +8,11 @@
 ####################################################################
 #logging.level.org.hibernate:sql=debug
 #logging.level.org.hibernate:type=trace
-NAIS_APP_NAME: bidrag-stonad
+NAIS_APP_NAME: bidrag-belopshistorikk
+
+logging.level:
+  secureLogger: OFF
+
 no.nav.security.jwt:
   issuer:
     aad:

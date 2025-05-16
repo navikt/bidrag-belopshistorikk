@@ -1,7 +1,7 @@
-name: bidrag-stonad
+name: bidrag-belopshistorikk
 ingresses:
-  - https://bidrag-stonad.intern.nav.no
-dbname: bidrag-stonad-prod
+  - https://bidrag-belopshistorikk.intern.nav.no
+dbname: bidrag-belopshistorikk-prod
 kafka:
   pool: nav-prod
 kafka-topic-vedtak: bidrag.vedtak
@@ -24,8 +24,8 @@ spec:
     limits:
       memory: 2048Mi
     requests:
-      cpu: 260m
-      memory: 900Mi
+      cpu: 50m
+      memory: 512Mi
   gcp:
     sqlInstances:
       tier: db-custom-1-3840
