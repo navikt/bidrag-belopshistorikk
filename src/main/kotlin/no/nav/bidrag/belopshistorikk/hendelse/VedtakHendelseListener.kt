@@ -30,7 +30,7 @@ open class PojoVedtakHendelseListener(
 
 open class KafkaVedtakHendelseListener(jsonMapperService: JsonMapperService, behandeHendelseService: BehandleHendelseService) :
     PojoVedtakHendelseListener(jsonMapperService, behandeHendelseService) {
-    @KafkaListener(groupId = "bidrag-belopshistorikk", topics = ["\${TOPIC_VEDTAK}"], errorHandler = "vedtakshendelseErrorHandler")
+    @KafkaListener(groupId = "bidrag-belopshistorikk-1", topics = ["\${TOPIC_VEDTAK}"], errorHandler = "vedtakshendelseErrorHandler")
     override fun lesHendelse(hendelse: String) {
         super.lesHendelse(hendelse)
     }

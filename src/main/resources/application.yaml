@@ -86,3 +86,7 @@ spring:
   jpa:
     hibernate.connection.provider_class: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
     database: postgresql
+
+spring.kafka:
+  consumer:
+    auto-offset-reset: earliest
