@@ -15,7 +15,7 @@ management:
 springdoc.packages-to-scan: no.nav.bidrag.belopshistorikk.controller
 
 logging.level:
-  secureLogger: DEBUG
+  secureLogger: INFO
 
 ---
 spring:
