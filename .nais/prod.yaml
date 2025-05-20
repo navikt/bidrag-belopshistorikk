@@ -5,7 +5,7 @@ dbname: bidrag-belopshistorikk-prod
 kafka:
   pool: nav-prod
 kafka-topic-vedtak: bidrag.vedtak
-spring-profiles: live,nais,database-legacy
+spring-profiles: live,nais,database-new
 azureAccessInbound:
   - application: bidrag-behandling
     namespace: bidrag
