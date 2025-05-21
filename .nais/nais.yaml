@@ -31,6 +31,10 @@ spec:
             namespace: {{this.namespace}}
             cluster: {{this.cluster}}
       {{/each}}
+    outbound:
+      rules:
+        - application: logging
+          namespace: nais-system
   image: {{ image }}
   kafka:
     pool: {{ kafka.pool }}
@@ -67,7 +71,7 @@ spec:
   gcp:
     sqlInstances:
       - name: {{ dbname }}
-        type: POSTGRES_15
+        type: POSTGRES_17
         databases:
           - name: {{ dbname }}
             envVarPrefix: DB
