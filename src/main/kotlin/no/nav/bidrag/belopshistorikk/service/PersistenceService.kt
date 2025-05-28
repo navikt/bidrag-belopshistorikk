@@ -1,7 +1,7 @@
 package no.nav.bidrag.belopshistorikk.service
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.annotation.Timed
-import no.nav.bidrag.belopshistorikk.LOGGER
 import no.nav.bidrag.belopshistorikk.bo.PeriodeBo
 import no.nav.bidrag.belopshistorikk.bo.toJustertPeriodeEntity
 import no.nav.bidrag.belopshistorikk.bo.toPeriodeEntity
@@ -20,6 +20,7 @@ import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønad
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class PersistenceService(

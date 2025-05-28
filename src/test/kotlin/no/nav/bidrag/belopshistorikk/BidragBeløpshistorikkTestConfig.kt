@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.info.Info
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.belopshistorikk.BidragBeløpshistorikkLocal.Companion.LOCAL_PROFILE
 import no.nav.bidrag.belopshistorikk.BidragBeløpshistorikkTest.Companion.TEST_PROFILE
-import no.nav.bidrag.belopshistorikk.hendelse.PojoVedtakHendelseListener
 import no.nav.bidrag.belopshistorikk.hendelse.VedtakHendelseListener
 import no.nav.bidrag.belopshistorikk.service.BehandleHendelseService
 import no.nav.bidrag.belopshistorikk.service.JsonMapperService
@@ -57,5 +56,5 @@ class BidragBeløpshistorikkTestConfig {
     }
 
     @Bean
-    fun vedtakHendelseListener(jsonMapperService: JsonMapperService, behandeHendelseService: BehandleHendelseService): VedtakHendelseListener = PojoVedtakHendelseListener(jsonMapperService, behandeHendelseService)
+    fun vedtakHendelseListener(jsonMapperService: JsonMapperService, behandeHendelseService: BehandleHendelseService): VedtakHendelseListener = VedtakHendelseListener(jsonMapperService, behandeHendelseService)
 }

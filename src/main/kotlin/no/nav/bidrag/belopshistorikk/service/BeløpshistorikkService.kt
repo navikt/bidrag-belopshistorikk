@@ -1,6 +1,6 @@
 package no.nav.bidrag.belopshistorikk.service
 
-import no.nav.bidrag.belopshistorikk.LOGGER
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.belopshistorikk.bo.OppdatertPeriode
 import no.nav.bidrag.belopshistorikk.bo.PeriodeBo
 import no.nav.bidrag.belopshistorikk.bo.toPeriodeBo
@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.YearMonth
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 @Transactional
