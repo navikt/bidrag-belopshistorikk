@@ -109,10 +109,12 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                 // Stønaden finnes ikke fra før. Hvis det er forsøkt endret mottaker for stønad som ikke finnes så skal det logges, men ikke feile.
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
                     LOGGER.warn("Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid")
-                    secureLogger.warn { "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid" }
+                    secureLogger.warn {
+                        "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid. Stønadsendring ${tilJson(stønadsendring)}"
+                    }
                 } else {
                     LOGGER.info("Skal opprette ny stønad for vedtaksid $vedtaksid")
-                    secureLogger.debug { "Skal opprette ny stønad for vedtaksid $vedtaksid" }
+                    secureLogger.debug { "Skal opprette ny stønad for vedtaksid $vedtaksid. Stønadsendring ${tilJson(stønadsendring)}" }
                     opprettStønad(
                         stønadsendring = stønadsendring,
                         vedtaksid = vedtaksid,
@@ -181,6 +183,9 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
                     LOGGER.warn("Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid")
                     secureLogger.warn { "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid" }
+                    secureLogger.warn {
+                        "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid. Engangsbeløp ${tilJson(engangsbeløp)}"
+                    }
                 } else {
                     if (engangsbeløp.beløp != null) {
                         // Kun engangsbeløp med beløp skal lagres
@@ -334,6 +339,12 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                     periodeListe = periodeListe,
                 ),
             )
+        } else {
+            LOGGER.warn("Periodelisten er tom (alle beløp er null). Stønad vil ikke bli opprettet for vedtaksid $vedtaksid")
+            secureLogger.warn {
+                "Periodelisten er tom (alle beløp er null). Stønad vil ikke bli opprettet for vedtaksid $vedtaksid. " +
+                    "Stønadsendring ${tilJson(stønadsendring)}"
+            }
         }
     }
 

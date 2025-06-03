@@ -10,9 +10,13 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme
 import no.nav.bidrag.belopshistorikk.hendelse.KafkaVedtakHendelseListener
 import no.nav.bidrag.belopshistorikk.service.BehandleHendelseService
 import no.nav.bidrag.belopshistorikk.service.JsonMapperService
+import no.nav.bidrag.commons.security.api.EnableSecurityConfiguration
+import no.nav.bidrag.commons.util.EnableSjekkForNyIdent
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.commons.web.CorrelationIdFilter
+import no.nav.bidrag.commons.web.DefaultCorsFilter
 import no.nav.bidrag.commons.web.UserMdcFilter
+import no.nav.bidrag.commons.web.config.RestOperationsAzure
 import no.nav.security.token.support.spring.api.EnableJwtTokenValidation
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
@@ -20,15 +24,16 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Profile
+import org.springframework.http.client.observation.DefaultClientRequestObservationConvention
 import org.springframework.kafka.listener.KafkaListenerErrorHandler
 import org.springframework.kafka.listener.ListenerExecutionFailedException
 import org.springframework.messaging.Message
 import java.util.Optional
 
 const val LIVE_PROFILE = "nais"
-const val LOKAL_NAIS_PROFILE = "lokal-nais"
 
 @Configuration
+@EnableSecurityConfiguration
 @OpenAPIDefinition(
     info = Info(title = "bidrag-beløpshistorikk", version = "v1"),
     security = [SecurityRequirement(name = "bearer-key")],
@@ -41,10 +46,14 @@ const val LOKAL_NAIS_PROFILE = "lokal-nais"
     type = SecuritySchemeType.HTTP,
 )
 @EnableAspectJAutoProxy
-@Import(CorrelationIdFilter::class, UserMdcFilter::class)
+@EnableSjekkForNyIdent
+@Import(CorrelationIdFilter::class, UserMdcFilter::class, DefaultCorsFilter::class, RestOperationsAzure::class)
 class BidragBeløpshistorikkConfig {
     @Bean
     fun timedAspect(registry: MeterRegistry): TimedAspect = TimedAspect(registry)
+
+    @Bean
+    fun clientRequestObservationConvention() = DefaultClientRequestObservationConvention()
 }
 
 val LOGGER = LoggerFactory.getLogger(KafkaConfig::class.java)

@@ -1,15 +1,20 @@
 package no.nav.bidrag.belopshistorikk.service
 
 import no.nav.bidrag.belopshistorikk.TestUtil.Companion.byggEngangsbeløpRequest
+import no.nav.bidrag.belopshistorikk.TestUtil.Companion.byggEngangsbeløpResponseFlereEngangsbeløp
 import no.nav.bidrag.belopshistorikk.TestUtil.Companion.byggStønadRequest
+import no.nav.bidrag.belopshistorikk.TestUtil.Companion.byggStønadResponseFlereStønader
 import no.nav.bidrag.belopshistorikk.bo.PeriodeBo
 import no.nav.bidrag.belopshistorikk.service.BeløpshistorikkServiceMockTest.MockitoHelper.any
 import no.nav.bidrag.belopshistorikk.service.BeløpshistorikkServiceMockTest.MockitoHelper.capture
+import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentEngangsbeløpRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettEngangsbeløpRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadRequestDto
 import org.assertj.core.api.Assertions.assertThat
@@ -23,6 +28,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -36,6 +42,9 @@ class BeløpshistorikkServiceMockTest {
     @Mock
     private lateinit var persistenceServiceMock: PersistenceService
 
+    @Mock
+    private lateinit var identUtilsMock: IdentUtils
+
     @Captor
     private lateinit var opprettStønadRequestDto: ArgumentCaptor<OpprettStønadRequestDto>
 
@@ -47,7 +56,7 @@ class BeløpshistorikkServiceMockTest {
 
     @Test
     fun `skal opprette ny komplett stønad`() {
-        Mockito.`when`(persistenceServiceMock.opprettStønad(capture(opprettStønadRequestDto))).thenReturn(1)
+        `when`(persistenceServiceMock.opprettStønad(capture(opprettStønadRequestDto))).thenReturn(1)
         doNothing().`when`(persistenceServiceMock).opprettPeriode(capture(periodeBoCaptor), eq(1))
 
         val nyStønadOpprettetStønadId = beløpshistorikkService.opprettStønad(byggStønadRequest())
@@ -89,8 +98,41 @@ class BeløpshistorikkServiceMockTest {
     }
 
     @Test
+    // Skal hente stønad og perioder der det hentes to stønader fra ulike identer
+    @Suppress("NonAsciiCharacters")
+    fun `skal hente stønad og perioder der det hentes to stønader fra ulike identer`() {
+        `when`(identUtilsMock.hentAlleIdenter(Personident("Skyldner123"))).thenReturn(listOf("Skyldner123", "Skyldner456"))
+        `when`(identUtilsMock.hentAlleIdenter(Personident("Kravhaver123"))).thenReturn(listOf("Kravhaver123"))
+        `when`(
+            persistenceServiceMock.hentStønad(
+                stønadType = Stønadstype.BIDRAG.toString(),
+                skyldnerIdentListe = listOf("Skyldner123", "Skyldner456"),
+                kravhaverIdentListe = listOf("Kravhaver123"),
+                sak = "SAK-001",
+            ),
+        ).thenReturn(byggStønadResponseFlereStønader())
+        `when`(
+            persistenceServiceMock.hentPerioderForStønad(1),
+        ).thenReturn(emptyList())
+
+        val hentStønadRequest = HentStønadRequest(
+            type = Stønadstype.BIDRAG,
+            sak = Saksnummer("SAK-001"),
+            skyldner = Personident("Skyldner123"),
+            kravhaver = Personident("Kravhaver123"),
+        )
+        val returnertStønad = beløpshistorikkService.hentStønad(hentStønadRequest)
+
+        assertAll(
+            { assertThat(returnertStønad).isNotNull() },
+            { assertThat(returnertStønad?.stønadsid).isEqualTo(1) },
+            { assertThat(returnertStønad?.skyldner).isEqualTo(Personident("Skyldner123")) },
+        )
+    }
+
+    @Test
     fun `skal opprette nytt engangsbeløp`() {
-        Mockito.`when`(persistenceServiceMock.opprettEngangsbeløp(capture(opprettEngangsbeløpRequestDto))).thenReturn(1)
+        `when`(persistenceServiceMock.opprettEngangsbeløp(capture(opprettEngangsbeløpRequestDto))).thenReturn(1)
 
         val nyttEngangsbeløpOpprettet = beløpshistorikkService.opprettEngangsbeløp(byggEngangsbeløpRequest())
 
@@ -119,6 +161,38 @@ class BeløpshistorikkServiceMockTest {
             { assertThat(engangsbeløpDto.innkreving).isEqualTo(Innkrevingstype.MED_INNKREVING) },
             { assertThat(engangsbeløpDto.referanse).isEqualTo("Referanse") },
             { assertThat(engangsbeløpDto.opprettetAv).isEqualTo("TEST") },
+        )
+    }
+
+    @Test
+    // Skal hente engangsbeløp der det hentes to engangsbeløp fra ulike identer
+    @Suppress("NonAsciiCharacters")
+    fun `skal hente engangsbeløp der det hentes to engangsbeløp fra ulike identer`() {
+        `when`(identUtilsMock.hentAlleIdenter(Personident("Skyldner123"))).thenReturn(listOf("Skyldner123", "Skyldner456"))
+        `when`(identUtilsMock.hentAlleIdenter(Personident("Kravhaver123"))).thenReturn(listOf("Kravhaver123"))
+        `when`(
+            persistenceServiceMock.hentEngangsbeløp(
+                engangsbeløpType = Engangsbeløptype.SÆRBIDRAG.toString(),
+                skyldnerIdentListe = listOf("Skyldner123", "Skyldner456"),
+                kravhaverIdentListe = listOf("Kravhaver123"),
+                sak = "SAK-001",
+                referanse = "Referanse-001",
+            ),
+        ).thenReturn(byggEngangsbeløpResponseFlereEngangsbeløp())
+
+        val hentEngangsbeløpRequest = HentEngangsbeløpRequest(
+            type = Engangsbeløptype.SÆRBIDRAG,
+            sak = Saksnummer("SAK-001"),
+            skyldner = Personident("Skyldner123"),
+            kravhaver = Personident("Kravhaver123"),
+            referanse = "Referanse-001",
+        )
+        val returnertEngangsbeløp = beløpshistorikkService.hentEngangsbeløp(hentEngangsbeløpRequest)
+
+        assertAll(
+            { assertThat(returnertEngangsbeløp).isNotNull() },
+            { assertThat(returnertEngangsbeløp?.engangsbeløpsid).isEqualTo(1) },
+            { assertThat(returnertEngangsbeløp?.skyldner).isEqualTo(Personident("Skyldner123")) },
         )
     }
 
