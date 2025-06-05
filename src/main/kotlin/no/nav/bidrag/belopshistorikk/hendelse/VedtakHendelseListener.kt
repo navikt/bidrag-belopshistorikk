@@ -31,10 +31,10 @@ open class PojoVedtakHendelseListener(
 open class KafkaVedtakHendelseListener(jsonMapperService: JsonMapperService, behandeHendelseService: BehandleHendelseService) :
     PojoVedtakHendelseListener(jsonMapperService, behandeHendelseService) {
     @KafkaListener(
-        groupId = "bidrag-belopshistorikk-2",
+        groupId = "bidrag-belopshistorikk-3",
         topics = ["\${TOPIC_VEDTAK}"],
         errorHandler = "vedtakshendelseErrorHandler",
-        properties = ["auto.offset.reset=earliest"],
+        properties = ["auto.offset.reset=latest"],
     )
     override fun lesHendelse(hendelse: String) {
         super.lesHendelse(hendelse)
