@@ -31,7 +31,7 @@ open class PojoVedtakHendelseListener(
 open class KafkaVedtakHendelseListener(jsonMapperService: JsonMapperService, behandeHendelseService: BehandleHendelseService) :
     PojoVedtakHendelseListener(jsonMapperService, behandeHendelseService) {
     @KafkaListener(
-        groupId = "bidrag-belopshistorikk-3",
+        groupId = "bidrag-belopshistorikk-4",
         topics = ["\${TOPIC_VEDTAK}"],
         errorHandler = "vedtakshendelseErrorHandler",
         properties = ["auto.offset.reset=latest"],

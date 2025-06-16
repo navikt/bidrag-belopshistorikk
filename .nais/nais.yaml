@@ -35,6 +35,8 @@ spec:
       rules:
         - application: logging
           namespace: nais-system
+      external:
+        - host: {{ access-outbound.PERSON_URL }}
   image: {{ image }}
   kafka:
     pool: {{ kafka.pool }}
