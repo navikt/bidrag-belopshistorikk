@@ -9,6 +9,7 @@
 #logging.level.org.hibernate:sql=debug
 #logging.level.org.hibernate:type=trace
 NAIS_APP_NAME: bidrag-belopshistorikk
+TOPIC_VEDTAK: topic.vedtak
 PERSON_URL: http://localhost:${wiremock.server.https-port}/person
 
 logging.level:

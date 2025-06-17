@@ -1,6 +1,6 @@
 package no.nav.bidrag.belopshistorikk.service
 
-import no.nav.bidrag.belopshistorikk.LOGGER
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.belopshistorikk.bo.OppdatertPeriode
 import no.nav.bidrag.belopshistorikk.bo.PeriodeBo
 import no.nav.bidrag.belopshistorikk.bo.toPeriodeBo
@@ -36,6 +36,8 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+private val LOGGER = KotlinLogging.logger {}
+
 @Service
 @Transactional
 class BeløpshistorikkService(val persistenceService: PersistenceService, private val identUtils: IdentUtils) {
@@ -43,7 +45,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     // Opprett komplett stønad (alle tabeller)
     fun opprettStønad(stønadRequest: OpprettStønadRequestDto): Int {
         // TODO Sjekke skyldner/kravhaver/mottaker for nyeste ident?
-        LOGGER.info("Oppretter ny stønad for sak ${stønadRequest.sak} og type ${stønadRequest.type}")
+        LOGGER.info { "Oppretter ny stønad for sak ${stønadRequest.sak} og type ${stønadRequest.type}" }
         secureLogger.debug { "Oppretter ny stønad: ${tilJson(stønadRequest)}" }
         val opprettetStønadId = persistenceService.opprettStønad(stønadRequest)
         stønadRequest.periodeListe.forEach { opprettPeriode(periodeRequest = it, stønadsid = opprettetStønadId) }
@@ -86,9 +88,9 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         if (stønadListe.isNotEmpty()) {
             // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
             if (stønadListe.size > 1) {
-                LOGGER.error(
-                    "Fant mer enn en stønad for angitt nøkkel. Behandling fortsetter med den første stønaden i lista. Sjekk om dette bør patches.",
-                )
+                LOGGER.error {
+                    "Fant mer enn en stønad for angitt nøkkel. Behandling fortsetter med den første stønaden i lista. Sjekk om dette bør patches."
+                }
                 secureLogger.error {
                     "Fant mer enn en stønad for angitt nøkkel: stønadType = ${request.type}, skyldnerIdentListe = $skyldnerIdentListe, " +
                         "kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}. Behandling fortsetter med den første stønaden i lista. " +
@@ -143,9 +145,9 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         if (stønadListe.isNotEmpty()) {
             // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
             if (stønadListe.size > 1) {
-                LOGGER.error(
-                    "Fant mer enn en stønad for angitt nøkkel. Behandling fortsetter med den første stønaden i lista. Sjekk om dette bør patches.",
-                )
+                LOGGER.error {
+                    "Fant mer enn en stønad for angitt nøkkel. Behandling fortsetter med den første stønaden i lista. Sjekk om dette bør patches."
+                }
                 secureLogger.error {
                     "Fant mer enn en stønad for angitt nøkkel: stønadType = ${request.type}, skyldnerIdentListe = $skyldnerIdentListe, " +
                         "kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}. Behandling fortsetter med den første stønaden i lista. " +
@@ -281,9 +283,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         if (stønadListe.isNotEmpty()) {
             // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
             if (stønadListe.size > 1) {
-                LOGGER.error(
-                    "Fant mer enn en stønad for angitt nøkkel. Henter den første stønaden i lista.",
-                )
+                LOGGER.error { "Fant mer enn en stønad for angitt nøkkel. Henter den første stønaden i lista." }
                 secureLogger.error {
                     "Fant mer enn en stønad for angitt nøkkel: stønadType = ${request.type}, skyldnerIdentListe = $skyldnerIdentListe, " +
                         "kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}. Henter den første stønaden i lista."
@@ -367,7 +367,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     // Oppretter engangsbeløp
     fun opprettEngangsbeløp(engangsbeløpRequest: OpprettEngangsbeløpRequestDto): Int {
         // TODO Sjekke skyldner/kravhaver/mottaker for nyeste ident?
-        LOGGER.info("Oppretter nytt engangsbeløp for vedtak med id ${engangsbeløpRequest.vedtaksid}")
+        LOGGER.info { "Oppretter nytt engangsbeløp for vedtak med id ${engangsbeløpRequest.vedtaksid}" }
         secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJson(engangsbeløpRequest)}" }
         return persistenceService.opprettEngangsbeløp(engangsbeløpRequest)
     }
@@ -388,10 +388,10 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         if (engangsbeløpListe.isNotEmpty()) {
             // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
             if (engangsbeløpListe.size > 1) {
-                LOGGER.error(
+                LOGGER.error {
                     "Fant mer enn ett engangsbeløp for angitt nøkkel. Behandling fortsetter med det første engangsbeløpet i lista. " +
-                        "Sjekk om dette bør patches.",
-                )
+                        "Sjekk om dette bør patches."
+                }
                 secureLogger.error {
                     "Fant mer enn ett engangsbeløp for angitt nøkkel: engangsbeløpType = ${request.type}, " +
                         "skyldnerIdentListe = $skyldnerIdentListe, kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}, " +
@@ -432,7 +432,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         vedtakstidspunkt: LocalDateTime,
     ) {
         val engangsbeløpsid = eksisterendeEngangsbeløp.engangsbeløpsid
-        LOGGER.info("Setter engangsbeløp med id $engangsbeløpsid som ugyldig")
+        LOGGER.info { "Setter engangsbeløp med id $engangsbeløpsid som ugyldig" }
         secureLogger.debug { "Setter engangsbeløp som ugyldig: ${tilJson(eksisterendeEngangsbeløp)}" }
         persistenceService.settEngangsbeløpSomUgyldig(
             engangsbeløpId = engangsbeløpsid,
@@ -443,12 +443,12 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
 
         // TODO Bør samtidig oppdatere skyldner/kravhaver/mottaker med nyeste ident?
         if (oppdatertEngangsbeløp.beløp != null) {
-            LOGGER.info("Oppretter nytt engangsbeløp")
+            LOGGER.info { "Oppretter nytt engangsbeløp" }
             secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJson(oppdatertEngangsbeløp)}" }
             persistenceService.opprettEngangsbeløp(oppdatertEngangsbeløp)
         } else {
             // Skal ikke opprette nytt engangsbeløp hvis det er null
-            LOGGER.info("Nytt engangsbeløp er null, opprettes ikke på nytt")
+            LOGGER.info { "Nytt engangsbeløp er null, opprettes ikke på nytt" }
             secureLogger.debug { "Nytt engangsbeløp er null, opprettes ikke på nytt" }
         }
     }
@@ -456,7 +456,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     private fun hentHistoriskeIdenter(personident: Personident): List<String> {
         val identListe = identUtils.hentAlleIdenter(personident)
         if (identListe.size > 1) {
-            LOGGER.warn("Flere historiske identer funnet for personident")
+            LOGGER.warn { "Flere historiske identer funnet for personident" }
             secureLogger.warn { "Flere historiske identer funnet for personident ${personident.verdi}: $identListe" }
         }
         return identListe

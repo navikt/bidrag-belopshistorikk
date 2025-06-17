@@ -51,7 +51,7 @@ internal class DefaultBehandleHendelseServiceTest {
     private lateinit var engangsbeløpRepository: EngangsbeløpRepository
 
     @Autowired
-    private lateinit var behandleHendelseService: DefaultBehandleHendelseService
+    private lateinit var behandleHendelseService: BehandleHendelseService
 
     @Autowired
     private lateinit var beløpshistorikkService: BeløpshistorikkService

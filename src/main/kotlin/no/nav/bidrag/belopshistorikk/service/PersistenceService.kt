@@ -1,7 +1,7 @@
 package no.nav.bidrag.belopshistorikk.service
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.annotation.Timed
-import no.nav.bidrag.belopshistorikk.LOGGER
 import no.nav.bidrag.belopshistorikk.bo.PeriodeBo
 import no.nav.bidrag.belopshistorikk.bo.toJustertPeriodeEntity
 import no.nav.bidrag.belopshistorikk.bo.toPeriodeEntity
@@ -18,6 +18,8 @@ import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettEngangs
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadRequestDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class PersistenceService(
@@ -103,7 +105,7 @@ class PersistenceService(
     fun hentPerioderForStønadInkludertUgyldiggjorte(id: Int): List<Periode> = periodeRepository.hentPerioderForStønadInkludertUgyldiggjorte(id)
 
     fun endreMottakerForStønad(stønadsid: Int, nyMottaker: String, opprettetAv: String) {
-        LOGGER.info("Oppdaterer mottaker for stønadsid $stønadsid")
+        LOGGER.info { "Oppdaterer mottaker for stønadsid $stønadsid" }
         secureLogger.debug { "Oppdaterer mottaker for stønadsid $stønadsid" }
         stønadRepository.endreMottakerForStønad(stønadsid = stønadsid, mottaker = nyMottaker, opprettetAv = opprettetAv)
     }
@@ -157,7 +159,7 @@ class PersistenceService(
     )
 
     fun endreMottakerForEngangsbeløp(engangsbeløpsid: Int, nyMottaker: String, opprettetAv: String) {
-        LOGGER.info("Oppdaterer mottaker for engangsbeløpsid $engangsbeløpsid")
+        LOGGER.info { "Oppdaterer mottaker for engangsbeløpsid $engangsbeløpsid" }
         secureLogger.debug { "Oppdaterer mottaker for engangsbeløpsid $engangsbeløpsid" }
         engangsbeløpRepository.endreMottakerForEngangsbeløp(engangsbeløpsid = engangsbeløpsid, mottaker = nyMottaker, opprettetAv = opprettetAv)
     }

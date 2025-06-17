@@ -1,42 +1,39 @@
 package no.nav.bidrag.belopshistorikk.hendelse
 
 import com.fasterxml.jackson.core.JacksonException
-import no.nav.bidrag.belopshistorikk.LOGGER
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.belopshistorikk.service.BehandleHendelseService
 import no.nav.bidrag.belopshistorikk.service.JsonMapperService
 import no.nav.bidrag.commons.util.secureLogger
 import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.kafka.support.KafkaHeaders
+import org.springframework.messaging.handler.annotation.Header
+import org.springframework.stereotype.Component
 
-interface VedtakHendelseListener {
-    fun lesHendelse(hendelse: String)
-}
+private val LOGGER = KotlinLogging.logger {}
 
-// sporingsdata fra hendelse json
-open class PojoVedtakHendelseListener(
-    private val jsonMapperService: JsonMapperService,
-    private val behandeHendelseService: BehandleHendelseService,
-) : VedtakHendelseListener {
-    override fun lesHendelse(hendelse: String) {
+@Component
+class VedtakHendelseListener(private val jsonMapperService: JsonMapperService, private val behandeHendelseService: BehandleHendelseService) {
+
+    @KafkaListener(
+        groupId = "bidrag-belopshistorikk-5",
+        topics = ["\${TOPIC_VEDTAK}"],
+        properties = ["auto.offset.reset=latest"],
+    )
+    fun lesHendelse(
+        hendelse: String,
+        @Header(KafkaHeaders.OFFSET) offset: Long = 1,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String = "",
+        @Header(KafkaHeaders.GROUP_ID) groupId: String = "",
+    ) {
         try {
+            LOGGER.info { "Behandler hendelse for offset: $offset, topic: $topic, groupId: $groupId" }
             val vedtakHendelse = jsonMapperService.mapHendelse(hendelse)
             behandeHendelseService.behandleHendelse(vedtakHendelse)
         } catch (e: JacksonException) {
-            LOGGER.error("Mapping av hendelse feilet for kafkamelding, se sikker logg for mer info")
+            LOGGER.error { "Mapping av hendelse feilet for kafkamelding, se sikker logg for mer info" }
             secureLogger.error { "Mapping av hendelse feilet for kafkamelding: $hendelse" }
             throw e
         }
-    }
-}
-
-open class KafkaVedtakHendelseListener(jsonMapperService: JsonMapperService, behandeHendelseService: BehandleHendelseService) :
-    PojoVedtakHendelseListener(jsonMapperService, behandeHendelseService) {
-    @KafkaListener(
-        groupId = "bidrag-belopshistorikk-4",
-        topics = ["\${TOPIC_VEDTAK}"],
-        errorHandler = "vedtakshendelseErrorHandler",
-        properties = ["auto.offset.reset=latest"],
-    )
-    override fun lesHendelse(hendelse: String) {
-        super.lesHendelse(hendelse)
     }
 }
