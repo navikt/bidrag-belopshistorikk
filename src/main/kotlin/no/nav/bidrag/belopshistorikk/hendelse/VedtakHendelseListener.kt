@@ -16,7 +16,7 @@ private val LOGGER = KotlinLogging.logger {}
 class VedtakHendelseListener(private val jsonMapperService: JsonMapperService, private val behandeHendelseService: BehandleHendelseService) {
 
     @KafkaListener(
-        groupId = "bidrag-belopshistorikk-6",
+        groupId = "bidrag-belopshistorikk-7",
         topics = ["\${TOPIC_VEDTAK}"],
         properties = ["auto.offset.reset=earliest"],
     )

@@ -56,6 +56,10 @@ spring:
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
           value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      max-poll-records: 100
+      fetch-min-size: 10KB
+      max-poll-interval: 300000
 
 # OIDC
 no.nav.security.jwt:

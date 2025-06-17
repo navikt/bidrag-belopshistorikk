@@ -203,7 +203,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         eksisterendeStønad.periodeListe.forEach { periode ->
             val justertPeriode = finnOverlappPeriode(eksisterendePeriode = periode.toPeriodeBo(), oppdatertStønad = oppdatertStønad)
             if (justertPeriode.settPeriodeSomUgyldig) {
-                // Setter opprinnelige periode som ugyldig
+                // Setter opprinnelig periode som ugyldig
                 persistenceService.settPeriodeSomUgyldig(
                     periodeId = periode.periodeid,
                     periodeGjortUgyldigAvVedtaksid = oppdatertStønadVedtakId,
