@@ -35,6 +35,8 @@ spec:
       rules:
         - application: logging
           namespace: nais-system
+      external:
+        - host: {{ access-outbound.PERSON_URL }}
   image: {{ image }}
   kafka:
     pool: {{ kafka.pool }}
@@ -81,3 +83,7 @@ spec:
       value: {{ kafka-topic-vedtak }}
     - name: SPRING_PROFILES_ACTIVE
       value: {{ spring-profiles }}
+    - name: PERSON_URL
+      value: {{ env.PERSON_URL }}
+    - name: PERSON_SCOPE
+      value: {{ env.PERSON_SCOPE }}

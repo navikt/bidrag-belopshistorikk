@@ -1,12 +1,13 @@
 package no.nav.bidrag.belopshistorikk.service
 
-import no.nav.bidrag.belopshistorikk.LOGGER
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.belopshistorikk.bo.OppdatertPeriode
 import no.nav.bidrag.belopshistorikk.bo.PeriodeBo
 import no.nav.bidrag.belopshistorikk.bo.toPeriodeBo
 import no.nav.bidrag.belopshistorikk.persistence.entity.toEngangsbeløpDto
 import no.nav.bidrag.belopshistorikk.persistence.entity.toStønadDto
 import no.nav.bidrag.belopshistorikk.persistence.entity.toStønadPeriodeDto
+import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -35,14 +36,18 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+private val LOGGER = KotlinLogging.logger {}
+
 @Service
 @Transactional
-class BeløpshistorikkService(val persistenceService: PersistenceService) {
+class BeløpshistorikkService(val persistenceService: PersistenceService, private val identUtils: IdentUtils) {
 
     // Opprett komplett stønad (alle tabeller)
     fun opprettStønad(stønadRequest: OpprettStønadRequestDto): Int {
+        // TODO Sjekke skyldner/kravhaver/mottaker for nyeste ident?
+        LOGGER.info { "Oppretter ny stønad for sak ${stønadRequest.sak} og type ${stønadRequest.type}" }
+        secureLogger.debug { "Oppretter ny stønad: ${tilJson(stønadRequest)}" }
         val opprettetStønadId = persistenceService.opprettStønad(stønadRequest)
-        // Perioder
         stønadRequest.periodeListe.forEach { opprettPeriode(periodeRequest = it, stønadsid = opprettetStønadId) }
         return opprettetStønadId
     }
@@ -69,14 +74,30 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
 
     // Henter stønad ut fra unik nøkkel for stønad
     fun hentStønad(request: HentStønadRequest): StønadDto? {
-        val stønad =
+        val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
+        val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
+        val stønadListe =
             persistenceService.hentStønad(
                 stønadType = request.type.toString(),
-                skyldner = request.skyldner.verdi,
-                kravhaver = request.kravhaver.verdi,
+                skyldnerIdentListe = skyldnerIdentListe,
+                kravhaverIdentListe = kravhaverIdentListe,
                 sak = request.sak.toString(),
             )
-        if (stønad != null) {
+        // TODO Bør skyldner/kravhaver/mottaker oppdateres med identUtils.hentNyesteIdent hvis det er flere identer og det ikke er den nyeste som er
+        //  lagret?
+        if (stønadListe.isNotEmpty()) {
+            // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
+            if (stønadListe.size > 1) {
+                LOGGER.error {
+                    "Fant mer enn en stønad for angitt nøkkel. Behandling fortsetter med den første stønaden i lista. Sjekk om dette bør patches."
+                }
+                secureLogger.error {
+                    "Fant mer enn en stønad for angitt nøkkel: stønadType = ${request.type}, skyldnerIdentListe = $skyldnerIdentListe, " +
+                        "kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}. Behandling fortsetter med den første stønaden i lista. " +
+                        "Sjekk om dette bør patches."
+                }
+            }
+            val stønad = stønadListe.first()
             val stønadPeriodeDtoListe = mutableListOf<StønadPeriodeDto>()
             val periodeListe = persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
             periodeListe.forEach { periode ->
@@ -88,12 +109,18 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
         }
     }
 
+    // Metode som bare brukes i test. Har derfor ikke implementert logikk for å sjekke mot historiske identer.
     fun hentStønadInkludertUgyldiggjortePerioder(stønadstype: String, skyldner: String, kravhaver: String, sak: String): StønadDto? {
-        val stønad = persistenceService.hentStønad(stønadType = stønadstype, skyldner = skyldner, kravhaver = kravhaver, sak = sak)
-        if (stønad != null) {
+        val stønadListe = persistenceService.hentStønad(
+            stønadType = stønadstype,
+            skyldnerIdentListe = listOf(skyldner),
+            kravhaverIdentListe = listOf(kravhaver),
+            sak = sak,
+        )
+        if (stønadListe.isNotEmpty()) {
+            val stønad = stønadListe.first()
             val stønadPeriodeDtoListe = mutableListOf<StønadPeriodeDto>()
-            val periodeListe =
-                persistenceService.hentPerioderForStønadInkludertUgyldiggjorte(stønad.stønadsid!!)
+            val periodeListe = persistenceService.hentPerioderForStønadInkludertUgyldiggjorte(stønad.stønadsid!!)
             periodeListe.forEach { periode ->
                 stønadPeriodeDtoListe.add(periode.toStønadPeriodeDto())
             }
@@ -104,14 +131,30 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
     }
 
     fun hentStønadHistorisk(request: HentStønadHistoriskRequest): StønadDto? {
-        val stønad =
+        val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
+        val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
+        val stønadListe =
             persistenceService.hentStønad(
                 stønadType = request.type.toString(),
-                skyldner = request.skyldner.verdi,
-                kravhaver = request.kravhaver.verdi,
+                skyldnerIdentListe = skyldnerIdentListe,
+                kravhaverIdentListe = kravhaverIdentListe,
                 sak = request.sak.toString(),
             )
-        if (stønad != null) {
+        // TODO Bør skyldner/kravhaver/mottaker oppdateres med identUtils.hentNyesteIdent hvis det er flere identer og det ikke er den nyeste som er
+        //  lagret?
+        if (stønadListe.isNotEmpty()) {
+            // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
+            if (stønadListe.size > 1) {
+                LOGGER.error {
+                    "Fant mer enn en stønad for angitt nøkkel. Behandling fortsetter med den første stønaden i lista. Sjekk om dette bør patches."
+                }
+                secureLogger.error {
+                    "Fant mer enn en stønad for angitt nøkkel: stønadType = ${request.type}, skyldnerIdentListe = $skyldnerIdentListe, " +
+                        "kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}. Behandling fortsetter med den første stønaden i lista. " +
+                        "Sjekk om dette bør patches."
+                }
+            }
+            val stønad = stønadListe.first()
             val stønadPeriodeDtoListe = mutableListOf<StønadPeriodeDto>()
             val periodeListe =
                 persistenceService.hentPerioderForStønadForAngittTidspunkt(id = stønad.stønadsid!!, gyldigTidspunkt = request.gyldigTidspunkt)
@@ -124,7 +167,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
         }
     }
 
-    // Henter alle stønad for angitt sak
+    // Henter alle stønader for angitt sak
     fun hentStønaderForSak(sak: String): List<StønadDto> {
         val stønadListe = persistenceService.hentStønaderForSak(sak)
         if (stønadListe.isNotEmpty()) {
@@ -148,6 +191,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
         val endretAvSaksbehandlerId = oppdatertStønad.opprettetAv
         val nesteIndeksreguleringsår = oppdatertStønad.nesteIndeksreguleringsår
 
+        // TODO Bør samtidig oppdatere skyldner/kravhaver/mottaker med nyeste ident?
         persistenceService.oppdaterStønad(
             stønadsid = stønadsid,
             opprettetAv = endretAvSaksbehandlerId,
@@ -159,7 +203,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
         eksisterendeStønad.periodeListe.forEach { periode ->
             val justertPeriode = finnOverlappPeriode(eksisterendePeriode = periode.toPeriodeBo(), oppdatertStønad = oppdatertStønad)
             if (justertPeriode.settPeriodeSomUgyldig) {
-                // Setter opprinnelige periode som ugyldig
+                // Setter opprinnelig periode som ugyldig
                 persistenceService.settPeriodeSomUgyldig(
                     periodeId = periode.periodeid,
                     periodeGjortUgyldigAvVedtaksid = oppdatertStønadVedtakId,
@@ -184,12 +228,12 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
     }
 
     fun finnLøpendeBidragssaker(request: LøpendeBidragssakerRequest): LøpendeBidragssakerResponse {
-        val stønader =
-            persistenceService.finnBidragssakerForSkyldner(request.skyldner.verdi)
+        val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
+        val stønadListe = persistenceService.finnBidragssakerForSkyldner(skyldnerIdentListe)
 
         val løpendeBidragssakListe = mutableListOf<LøpendeBidragssak>()
 
-        stønader.forEach { stønad ->
+        stønadListe.forEach { stønad ->
             val periode =
                 persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
                     .filter { it.fom.isBefore(request.dato.plusDays(1)) && (it.til == null || it.til.isAfter(request.dato)) }
@@ -211,30 +255,41 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
     }
 
     fun finnAlleStønaderForSkyldner(request: SkyldnerStønaderRequest): SkyldnerStønaderResponse {
-        val stønader =
-            persistenceService.finnAlleStønaderForSkyldner(request.skyldner.verdi)
+        val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
+        val stønadListe = persistenceService.finnAlleStønaderForSkyldner(skyldnerIdentListe)
 
-        val stønaderListe = stønader.map { stønad ->
+        val skyldnerStønadListe = stønadListe.map { stønad ->
             SkyldnerStønad(
                 sak = Saksnummer(stønad.sak),
                 type = Stønadstype.valueOf(stønad.type),
                 kravhaver = Personident(stønad.kravhaver),
             )
         }
-        return SkyldnerStønaderResponse(stønaderListe)
+        return SkyldnerStønaderResponse(skyldnerStønadListe)
     }
 
     // Henter stønad ut fra unik nøkkel for stønad
     fun hentStønadMedPeriodebeløp(request: HentStønadRequest): StønadMedPeriodeBeløpResponse? {
-        val stønad =
+        val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
+        val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
+        val stønadListe =
             persistenceService.hentStønad(
                 stønadType = request.type.toString(),
-                skyldner = request.skyldner.verdi,
-                kravhaver = request.kravhaver.verdi,
+                skyldnerIdentListe = skyldnerIdentListe,
+                kravhaverIdentListe = kravhaverIdentListe,
                 sak = request.sak.toString(),
             )
 
-        if (stønad != null) {
+        if (stønadListe.isNotEmpty()) {
+            // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
+            if (stønadListe.size > 1) {
+                LOGGER.error { "Fant mer enn en stønad for angitt nøkkel. Henter den første stønaden i lista." }
+                secureLogger.error {
+                    "Fant mer enn en stønad for angitt nøkkel: stønadType = ${request.type}, skyldnerIdentListe = $skyldnerIdentListe, " +
+                        "kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}. Henter den første stønaden i lista."
+                }
+            }
+            val stønad = stønadListe.first()
             val periodeListe = persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
             return StønadMedPeriodeBeløpResponse(
                 førsteIndeksreguleringsår = stønad.nesteIndeksreguleringsår,
@@ -311,25 +366,45 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
 
     // Oppretter engangsbeløp
     fun opprettEngangsbeløp(engangsbeløpRequest: OpprettEngangsbeløpRequestDto): Int {
-        LOGGER.info("Oppretter nytt engangsbeløp for vedtak med id ${engangsbeløpRequest.vedtaksid}")
+        // TODO Sjekke skyldner/kravhaver/mottaker for nyeste ident?
+        LOGGER.info { "Oppretter nytt engangsbeløp for vedtak med id ${engangsbeløpRequest.vedtaksid}" }
         secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJson(engangsbeløpRequest)}" }
         return persistenceService.opprettEngangsbeløp(engangsbeløpRequest)
     }
 
     // Henter engangsbeløp ut fra unik nøkkel
     fun hentEngangsbeløp(request: HentEngangsbeløpRequest): EngangsbeløpDto? {
-        val engangsbeløp =
+        val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
+        val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
+        val engangsbeløpListe =
             persistenceService.hentEngangsbeløp(
                 engangsbeløpType = request.type.toString(),
-                skyldner = request.skyldner.verdi,
-                kravhaver = request.kravhaver.verdi,
+                skyldnerIdentListe = skyldnerIdentListe,
+                kravhaverIdentListe = kravhaverIdentListe,
                 sak = request.sak.toString(),
                 referanse = request.referanse,
             )
-        return engangsbeløp?.toEngangsbeløpDto()
+        // TODO Bør skyldner/kravhaver oppdateres med identUtils.hentNyesteIdent hvis det er flere identer og det ikke er den nyeste som er lagret?
+        if (engangsbeløpListe.isNotEmpty()) {
+            // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
+            if (engangsbeløpListe.size > 1) {
+                LOGGER.error {
+                    "Fant mer enn ett engangsbeløp for angitt nøkkel. Behandling fortsetter med det første engangsbeløpet i lista. " +
+                        "Sjekk om dette bør patches."
+                }
+                secureLogger.error {
+                    "Fant mer enn ett engangsbeløp for angitt nøkkel: engangsbeløpType = ${request.type}, " +
+                        "skyldnerIdentListe = $skyldnerIdentListe, kravhaverIdentListe = $kravhaverIdentListe, sak = ${request.sak}, " +
+                        "referanse = ${request.referanse}. Behandling fortsetter med det første engangsbeløpet i lista. Sjekk om dette bør patches."
+                }
+            }
+            return engangsbeløpListe.first().toEngangsbeløpDto()
+        } else {
+            return null
+        }
     }
 
-    // Henter historiske engangsbeløp
+    // Henter historiske engangsbeløp. Brukes bare i test. Har derfor ikke implementert logikk for å sjekke mot historiske identer.
     fun hentHistoriskeEngangsbeløp(request: HentEngangsbeløpRequest): List<EngangsbeløpDto> {
         val engangsbeløpListe =
             persistenceService.hentHistoriskeEngangsbeløp(
@@ -357,7 +432,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
         vedtakstidspunkt: LocalDateTime,
     ) {
         val engangsbeløpsid = eksisterendeEngangsbeløp.engangsbeløpsid
-        LOGGER.info("Setter engangsbeløp med id $engangsbeløpsid som ugyldig")
+        LOGGER.info { "Setter engangsbeløp med id $engangsbeløpsid som ugyldig" }
         secureLogger.debug { "Setter engangsbeløp som ugyldig: ${tilJson(eksisterendeEngangsbeløp)}" }
         persistenceService.settEngangsbeløpSomUgyldig(
             engangsbeløpId = engangsbeløpsid,
@@ -365,16 +440,25 @@ class BeløpshistorikkService(val persistenceService: PersistenceService) {
             vedtakstidspunkt = vedtakstidspunkt,
             endretAv = oppdatertEngangsbeløp.opprettetAv,
         )
+
+        // TODO Bør samtidig oppdatere skyldner/kravhaver/mottaker med nyeste ident?
         if (oppdatertEngangsbeløp.beløp != null) {
-            LOGGER.info("Oppretter nytt engangsbeløp")
+            LOGGER.info { "Oppretter nytt engangsbeløp" }
             secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJson(oppdatertEngangsbeløp)}" }
             persistenceService.opprettEngangsbeløp(oppdatertEngangsbeløp)
         } else {
             // Skal ikke opprette nytt engangsbeløp hvis det er null
-            LOGGER.info("Nytt engangsbeløp er null, opprettes ikke på nytt")
+            LOGGER.info { "Nytt engangsbeløp er null, opprettes ikke på nytt" }
             secureLogger.debug { "Nytt engangsbeløp er null, opprettes ikke på nytt" }
         }
     }
 
-    fun hentPeriode(periodeId: Int): StønadPeriodeDto? = persistenceService.hentPeriode(periodeId)
+    private fun hentHistoriskeIdenter(personident: Personident): List<String> {
+        val identListe = identUtils.hentAlleIdenter(personident)
+        if (identListe.size > 1) {
+            LOGGER.warn { "Flere historiske identer funnet for personident" }
+            secureLogger.warn { "Flere historiske identer funnet for personident ${personident.verdi}: $identListe" }
+        }
+        return identListe
+    }
 }

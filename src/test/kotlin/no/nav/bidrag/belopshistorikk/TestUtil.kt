@@ -1,5 +1,8 @@
 package no.nav.bidrag.belopshistorikk
 
+import no.nav.bidrag.belopshistorikk.persistence.entity.Engangsbeløp
+import no.nav.bidrag.belopshistorikk.persistence.entity.Stønad
+import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -49,6 +52,31 @@ class TestUtil {
             ),
         )
 
+        fun byggStønadResponseFlereStønader() = listOf(
+            Stønad(
+                stønadsid = 1,
+                type = Stønadstype.BIDRAG.toString(),
+                sak = "SAK-001",
+                skyldner = "Skyldner123",
+                kravhaver = "Kravhaver123",
+                mottaker = "Mottaker123",
+                nesteIndeksreguleringsår = 2026,
+                innkreving = Innkrevingstype.MED_INNKREVING.toString(),
+                opprettetAv = "X123456",
+            ),
+            Stønad(
+                stønadsid = 2,
+                type = Stønadstype.BIDRAG.toString(),
+                sak = "SAK-002",
+                skyldner = "Skyldner456",
+                kravhaver = "Kravhaver123",
+                mottaker = "Mottaker123",
+                nesteIndeksreguleringsår = 2026,
+                innkreving = Innkrevingstype.MED_INNKREVING.toString(),
+                opprettetAv = "X123456",
+            ),
+        )
+
         fun byggEngangsbeløpRequest() = OpprettEngangsbeløpRequestDto(
             type = Engangsbeløptype.SÆRBIDRAG,
             sak = Saksnummer("SAK-001"),
@@ -85,6 +113,37 @@ class TestUtil {
             innkreving = Innkrevingstype.MED_INNKREVING,
             referanse = "Referanse",
             opprettetAv = "TEST",
+        )
+
+        fun byggEngangsbeløpResponseFlereEngangsbeløp() = listOf(
+            Engangsbeløp(
+                engangsbeløpsid = 1,
+                type = Engangsbeløptype.SÆRBIDRAG.toString(),
+                sak = "SAK-001",
+                skyldner = "Skyldner123",
+                kravhaver = "Kravhaver123",
+                mottaker = "Mottaker123",
+                vedtaksid = 1,
+                valutakode = "NOK",
+                resultatkode = Resultatkode.SÆRBIDRAG_INNVILGET.toString(),
+                innkreving = Innkrevingstype.MED_INNKREVING.toString(),
+                referanse = "Referanse-001",
+                opprettetAv = "TEST",
+            ),
+            Engangsbeløp(
+                engangsbeløpsid = 2,
+                type = Engangsbeløptype.SÆRBIDRAG.toString(),
+                sak = "SAK-002",
+                skyldner = "Skyldner456",
+                kravhaver = "Kravhaver123",
+                mottaker = "Mottaker123",
+                vedtaksid = 1,
+                valutakode = "NOK",
+                resultatkode = Resultatkode.SÆRBIDRAG_INNVILGET.toString(),
+                innkreving = Innkrevingstype.MED_INNKREVING.toString(),
+                referanse = "Referanse-002",
+                opprettetAv = "TEST",
+            ),
         )
     }
 }

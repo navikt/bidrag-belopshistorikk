@@ -42,7 +42,6 @@ spring:
     hibernate.connection.provider_class: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
     database: postgresql
   kafka:
-
     bootstrap-servers: ${KAFKA_BROKERS}
     properties:
       security.protocol: SSL
@@ -57,9 +56,24 @@ spring:
         producer:
           key-serializer: org.apache.kafka.common.serialization.StringSerializer
           value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      max-poll-records: 100
+      fetch-min-size: 10KB
+      max-poll-interval: 300000
 
 # OIDC
 no.nav.security.jwt:
+  client:
+    registration:
+      bidrag-person:
+        resource-url: ${PERSON_URL}
+        token-endpoint-url: https://login.microsoftonline.com/${AZURE_APP_TENANT_ID}/oauth2/v2.0/token
+        grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+        scope: api://${PERSON_SCOPE}/.default
+        authentication:
+          client-id: ${AZURE_APP_CLIENT_ID}
+          client-secret: ${AZURE_APP_CLIENT_SECRET}
+          client-auth-method: client_secret_post
   issuer:
     aad:
       discoveryurl: ${AZURE_APP_WELL_KNOWN_URL}

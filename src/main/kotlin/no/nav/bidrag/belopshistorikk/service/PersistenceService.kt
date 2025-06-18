@@ -1,7 +1,7 @@
 package no.nav.bidrag.belopshistorikk.service
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.annotation.Timed
-import no.nav.bidrag.belopshistorikk.LOGGER
 import no.nav.bidrag.belopshistorikk.bo.PeriodeBo
 import no.nav.bidrag.belopshistorikk.bo.toJustertPeriodeEntity
 import no.nav.bidrag.belopshistorikk.bo.toPeriodeEntity
@@ -10,16 +10,16 @@ import no.nav.bidrag.belopshistorikk.persistence.entity.Periode
 import no.nav.bidrag.belopshistorikk.persistence.entity.Stønad
 import no.nav.bidrag.belopshistorikk.persistence.entity.toEngangsbeløpEntity
 import no.nav.bidrag.belopshistorikk.persistence.entity.toStønadEntity
-import no.nav.bidrag.belopshistorikk.persistence.entity.toStønadPeriodeDto
 import no.nav.bidrag.belopshistorikk.persistence.repository.EngangsbeløpRepository
 import no.nav.bidrag.belopshistorikk.persistence.repository.PeriodeRepository
 import no.nav.bidrag.belopshistorikk.persistence.repository.StønadRepository
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettEngangsbeløpRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadRequestDto
-import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class PersistenceService(
@@ -86,21 +86,26 @@ class PersistenceService(
     }
 
     @Timed
-    fun hentStønad(stønadType: String, skyldner: String, kravhaver: String, sak: String): Stønad? =
-        stønadRepository.finnStønad(stønadstype = stønadType, skyldner = skyldner, kravhaver = kravhaver, sak = sak)
+    fun hentStønad(stønadType: String, skyldnerIdentListe: List<String>, kravhaverIdentListe: List<String>, sak: String): List<Stønad> =
+        stønadRepository.finnStønad(
+            stønadstype = stønadType,
+            skyldnerIdentListe = skyldnerIdentListe,
+            kravhaverIdentListe = kravhaverIdentListe,
+            sak = sak,
+        )
 
     fun hentStønaderForSak(sak: String): List<Stønad> = stønadRepository.finnStønaderForSak(sak)
 
     @Timed
-    fun finnBidragssakerForSkyldner(skyldner: String): List<Stønad> = stønadRepository.finnBidragssakerForSkyldner(skyldner)
-    fun finnAlleStønaderForSkyldner(skyldner: String): List<Stønad> = stønadRepository.finnAlleStønaderForSkyldner(skyldner)
+    fun finnBidragssakerForSkyldner(skyldnerIdentListe: List<String>): List<Stønad> = stønadRepository.finnBidragssakerForSkyldner(skyldnerIdentListe)
+    fun finnAlleStønaderForSkyldner(skyldnerIdentListe: List<String>): List<Stønad> = stønadRepository.finnAlleStønaderForSkyldner(skyldnerIdentListe)
 
     fun hentPerioderForStønad(id: Int): List<Periode> = periodeRepository.hentGyldigePerioderForStønad(id)
 
     fun hentPerioderForStønadInkludertUgyldiggjorte(id: Int): List<Periode> = periodeRepository.hentPerioderForStønadInkludertUgyldiggjorte(id)
 
     fun endreMottakerForStønad(stønadsid: Int, nyMottaker: String, opprettetAv: String) {
-        LOGGER.info("Oppdaterer mottaker for stønadsid $stønadsid")
+        LOGGER.info { "Oppdaterer mottaker for stønadsid $stønadsid" }
         secureLogger.debug { "Oppdaterer mottaker for stønadsid $stønadsid" }
         stønadRepository.endreMottakerForStønad(stønadsid = stønadsid, mottaker = nyMottaker, opprettetAv = opprettetAv)
     }
@@ -111,20 +116,6 @@ class PersistenceService(
             periodeGjortUgyldigAvVedtaksid = periodeGjortUgyldigAvVedtaksid,
             vedtakstidspunkt = vedtakstidspunkt,
         )
-    }
-
-    fun hentPeriode(id: Int): StønadPeriodeDto? {
-        val periode =
-            periodeRepository.findById(id)
-                .orElseThrow {
-                    IllegalArgumentException(
-                        String.format(
-                            "Fant ikke periode med id %d i databasen",
-                            id,
-                        ),
-                    )
-                }
-        return periode.toStønadPeriodeDto()
     }
 
     fun hentPerioderForStønadForAngittTidspunkt(id: Int, gyldigTidspunkt: LocalDateTime): List<Periode> =
@@ -138,14 +129,19 @@ class PersistenceService(
     }
 
     @Timed
-    fun hentEngangsbeløp(engangsbeløpType: String, skyldner: String, kravhaver: String, sak: String, referanse: String): Engangsbeløp? =
-        engangsbeløpRepository.finnEngangsbeløp(
-            engangsbeløpstype = engangsbeløpType,
-            skyldner = skyldner,
-            kravhaver = kravhaver,
-            sak = sak,
-            referanse = referanse,
-        )
+    fun hentEngangsbeløp(
+        engangsbeløpType: String,
+        skyldnerIdentListe: List<String>,
+        kravhaverIdentListe: List<String>,
+        sak: String,
+        referanse: String,
+    ): List<Engangsbeløp> = engangsbeløpRepository.finnEngangsbeløp(
+        engangsbeløpstype = engangsbeløpType,
+        skyldnerIdentListe = skyldnerIdentListe,
+        kravhaverIdentListe = kravhaverIdentListe,
+        sak = sak,
+        referanse = referanse,
+    )
 
     @Timed
     fun hentHistoriskeEngangsbeløp(
@@ -163,7 +159,7 @@ class PersistenceService(
     )
 
     fun endreMottakerForEngangsbeløp(engangsbeløpsid: Int, nyMottaker: String, opprettetAv: String) {
-        LOGGER.info("Oppdaterer mottaker for engangsbeløpsid $engangsbeløpsid")
+        LOGGER.info { "Oppdaterer mottaker for engangsbeløpsid $engangsbeløpsid" }
         secureLogger.debug { "Oppdaterer mottaker for engangsbeløpsid $engangsbeløpsid" }
         engangsbeløpRepository.endreMottakerForEngangsbeløp(engangsbeløpsid = engangsbeløpsid, mottaker = nyMottaker, opprettetAv = opprettetAv)
     }

@@ -8,10 +8,16 @@ import java.time.LocalDateTime
 
 interface EngangsbeløpRepository : CrudRepository<Engangsbeløp, Int?> {
     @Query(
-        "select eb from Engangsbeløp eb where eb.type = :engangsbeløpstype and eb.skyldner = :skyldner and eb.kravhaver = :kravhaver " +
-            "and eb.sak = :sak and eb.referanse = :referanse and eb.gjortUgyldigAvVedtaksid is null",
+        "select eb from Engangsbeløp eb where eb.type = :engangsbeløpstype and eb.skyldner in :skyldnerIdentListe " +
+            "and eb.kravhaver in :kravhaverIdentListe and eb.sak = :sak and eb.referanse = :referanse and eb.gjortUgyldigAvVedtaksid is null",
     )
-    fun finnEngangsbeløp(engangsbeløpstype: String, skyldner: String, kravhaver: String, sak: String, referanse: String): Engangsbeløp?
+    fun finnEngangsbeløp(
+        engangsbeløpstype: String,
+        skyldnerIdentListe: List<String>,
+        kravhaverIdentListe: List<String>,
+        sak: String,
+        referanse: String,
+    ): List<Engangsbeløp>
 
     @Query(
         "select eb from Engangsbeløp eb where eb.type = :engangsbeløpstype and eb.skyldner = :skyldner and eb.kravhaver = :kravhaver " +

@@ -19,6 +19,11 @@ azureAccessInbound:
   - application: bidrag-automatisk-jobb-q2
     namespace: bidrag
     cluster: dev-gcp
+env:
+  PERSON_URL: https://bidrag-person-q2.dev-fss-pub.nais.io/bidrag-person
+  PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q2
+access-outbound:
+  PERSON_URL: bidrag-person-q2.dev-fss-pub.nais.io
 spec:
   replicas:
     min: 1

@@ -3,7 +3,7 @@ package no.nav.bidrag.belopshistorikk.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import no.nav.bidrag.belopshistorikk.LOGGER
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
@@ -26,16 +26,14 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-interface BehandleHendelseService {
-    fun behandleHendelse(vedtakHendelse: VedtakHendelse)
-}
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
-@Transactional
-class DefaultBehandleHendelseService(private val beløpshistorikkService: BeløpshistorikkService, private val persistenceService: PersistenceService) :
-    BehandleHendelseService {
-    override fun behandleHendelse(vedtakHendelse: VedtakHendelse) {
-        LOGGER.info("Behandler vedtakHendelse med id ${vedtakHendelse.id}")
+class BehandleHendelseService(private val beløpshistorikkService: BeløpshistorikkService, private val persistenceService: PersistenceService) {
+
+    @Transactional
+    fun behandleHendelse(vedtakHendelse: VedtakHendelse) {
+        LOGGER.info { "Behandler vedtakHendelse med id ${vedtakHendelse.id}" }
         secureLogger.debug { "Behandler vedtakHendelse: ${tilJson(vedtakHendelse)}" }
 
         vedtakHendelse.stønadsendringListe?.forEach { stønadsendring ->
@@ -68,7 +66,7 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
     ) {
         // Sjekker om stønad skal oppdateres
         if (stønadsendring.beslutning == Beslutningstype.ENDRING && stønadsendring.innkreving == Innkrevingstype.MED_INNKREVING) {
-            LOGGER.info("Behandler stønadsendring med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid")
+            LOGGER.info { "Behandler stønadsendring med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid" }
             secureLogger.debug {
                 "Behandler stønadsendring med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid: " +
                     tilJson(stønadsendring)
@@ -86,7 +84,7 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
             if (eksisterendeStønad != null) {
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
                     // Mottatt hendelse skal oppdatere mottaker for alle stønader i stønadsendringListe. Ingen perioder skal oppdateres.
-                    LOGGER.info("Skal oppdatere mottaker på eksisterende stønad for vedtaksid $vedtaksid")
+                    LOGGER.info { "Skal oppdatere mottaker på eksisterende stønad for vedtaksid $vedtaksid" }
                     secureLogger.debug { "Skal oppdatere mottaker på eksisterende stønad for vedtaksid $vedtaksid: ${tilJson(eksisterendeStønad)}" }
                     persistenceService.endreMottakerForStønad(
                         stønadsid = eksisterendeStønad.stønadsid,
@@ -95,7 +93,7 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                     )
                 } else {
                     // Mottatt hendelse skal oppdatere eksisterende stønad
-                    LOGGER.info("Skal oppdatere eksisterende stønad for vedtaksid $vedtaksid")
+                    LOGGER.info { "Skal oppdatere eksisterende stønad for vedtaksid $vedtaksid" }
                     secureLogger.debug { "Skal oppdatere eksisterende stønad for vedtaksid $vedtaksid: ${tilJson(eksisterendeStønad)}" }
                     endreStønad(
                         eksisterendeStønad = eksisterendeStønad,
@@ -108,11 +106,13 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
             } else {
                 // Stønaden finnes ikke fra før. Hvis det er forsøkt endret mottaker for stønad som ikke finnes så skal det logges, men ikke feile.
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
-                    LOGGER.warn("Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid")
-                    secureLogger.warn { "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid" }
+                    LOGGER.warn { "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid" }
+                    secureLogger.warn {
+                        "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid. Stønadsendring ${tilJson(stønadsendring)}"
+                    }
                 } else {
-                    LOGGER.info("Skal opprette ny stønad for vedtaksid $vedtaksid")
-                    secureLogger.debug { "Skal opprette ny stønad for vedtaksid $vedtaksid" }
+                    LOGGER.info { "Skal opprette ny stønad for vedtaksid $vedtaksid" }
+                    secureLogger.debug { "Skal opprette ny stønad for vedtaksid $vedtaksid. Stønadsendring ${tilJson(stønadsendring)}" }
                     opprettStønad(
                         stønadsendring = stønadsendring,
                         vedtaksid = vedtaksid,
@@ -122,7 +122,7 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                 }
             }
         } else {
-            LOGGER.info("Stønadsendring for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling")
+            LOGGER.info { "Stønadsendring for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling" }
             secureLogger.debug { "Stønadsendring for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling: ${tilJson(stønadsendring)}" }
         }
     }
@@ -136,7 +136,7 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
     ) {
         // Sjekker om engangsbeløp skal oppdateres
         if (engangsbeløp.beslutning == Beslutningstype.ENDRING && engangsbeløp.innkreving == Innkrevingstype.MED_INNKREVING) {
-            LOGGER.info("Behandler engangsbeløp med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid")
+            LOGGER.info { "Behandler engangsbeløp med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid" }
             secureLogger.debug {
                 "Behandler engangsbeløp med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid: " +
                     tilJson(engangsbeløp)
@@ -155,7 +155,7 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
             if (eksisterendeEngangsbeløp != null) {
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
                     // Mottatt hendelse skal oppdatere mottaker for engangsbeløp
-                    LOGGER.info("Skal oppdatere mottaker på eksisterende engangsbeløp for vedtaksid $vedtaksid")
+                    LOGGER.info { "Skal oppdatere mottaker på eksisterende engangsbeløp for vedtaksid $vedtaksid" }
                     secureLogger.debug {
                         "Skal oppdatere mottaker på eksisterende engangsbeløp for vedtaksid $vedtaksid: ${tilJson(eksisterendeEngangsbeløp)}"
                     }
@@ -166,7 +166,7 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                     )
                 } else {
                     // Mottatt hendelse skal oppdatere eksisterende engangsbeløp
-                    LOGGER.info("Skal oppdatere eksisterende engangsbeløp for vedtaksid $vedtaksid")
+                    LOGGER.info { "Skal oppdatere eksisterende engangsbeløp for vedtaksid $vedtaksid" }
                     secureLogger.debug { "Skal oppdatere eksisterende engangsbeløp for vedtaksid $vedtaksid: ${tilJson(eksisterendeEngangsbeløp)}" }
                     endreEngangsbeløp(
                         eksisterendeEngangsbeløp = eksisterendeEngangsbeløp,
@@ -179,12 +179,14 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
             } else {
                 // Stønaden finnes ikke fra før. Hvis det er forsøkt endret mottaker for engangsbeløp som ikke finnes så skal det logges, men ikke feile.
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
-                    LOGGER.warn("Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid")
-                    secureLogger.warn { "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid" }
+                    LOGGER.warn { "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid" }
+                    secureLogger.warn {
+                        "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid. Engangsbeløp ${tilJson(engangsbeløp)}"
+                    }
                 } else {
                     if (engangsbeløp.beløp != null) {
                         // Kun engangsbeløp med beløp skal lagres
-                        LOGGER.info("Skal opprette nytt engangsbeløp for vedtaksid $vedtaksid")
+                        LOGGER.info { "Skal opprette nytt engangsbeløp for vedtaksid $vedtaksid" }
                         secureLogger.debug { "Skal opprette nytt engangsbeløp for vedtaksid $vedtaksid" }
                         opprettEngangsbeløp(
                             engangsbeløp = engangsbeløp,
@@ -194,13 +196,13 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                         )
                     } else {
                         // Ingen engangsbeløp med beløp = null skal lagres
-                        LOGGER.info("Engangsbeløp for vedtaksid $vedtaksid er null og vil ikke bli lagret")
+                        LOGGER.info { "Engangsbeløp for vedtaksid $vedtaksid er null og vil ikke bli lagret" }
                         secureLogger.debug { "Engangsbeløp for vedtaksid $vedtaksid er null og vil ikke bli lagret: ${tilJson(engangsbeløp)}" }
                     }
                 }
             }
         } else {
-            LOGGER.info("Engangsbeløp for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling")
+            LOGGER.info { "Engangsbeløp for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling" }
             secureLogger.debug { "Engangsbeløp for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling: ${tilJson(engangsbeløp)}" }
         }
     }
@@ -334,6 +336,12 @@ class DefaultBehandleHendelseService(private val beløpshistorikkService: Beløp
                     periodeListe = periodeListe,
                 ),
             )
+        } else {
+            LOGGER.warn { "Periodelisten er tom (alle beløp er null). Stønad vil ikke bli opprettet for vedtaksid $vedtaksid" }
+            secureLogger.warn {
+                "Periodelisten er tom (alle beløp er null). Stønad vil ikke bli opprettet for vedtaksid $vedtaksid. " +
+                    "Stønadsendring ${tilJson(stønadsendring)}"
+            }
         }
     }
 
