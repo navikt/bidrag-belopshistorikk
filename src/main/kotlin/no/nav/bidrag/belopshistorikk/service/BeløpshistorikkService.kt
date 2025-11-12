@@ -16,12 +16,16 @@ import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentEngangsbeløpRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.LøpendeBidragPeriodeRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.LøpendeBidragssakerRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettEngangsbeløpRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadsperiodeRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.SkyldnerStønaderRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.BidragPeriode
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.EngangsbeløpDto
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.LøpendeBidrag
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.LøpendeBidragPeriodeResponse
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.LøpendeBidragssak
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.LøpendeBidragssakerResponse
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.PeriodeBeløp
@@ -307,6 +311,41 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         }
     }
 
+    fun finnLøpendeBidragIPeriodeForSkyldner(request: LøpendeBidragPeriodeRequest): LøpendeBidragPeriodeResponse {
+        val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
+        val stønadListe = persistenceService.finnBidragssakerForSkyldner(skyldnerIdentListe)
+
+        val løpendeBidragListe = mutableListOf<LøpendeBidrag>()
+
+        stønadListe.forEach { stønad ->
+            val bidragPeriodeListe = mutableListOf<BidragPeriode>()
+            val periodeListe =
+                persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
+            periodeListe.forEach { periode ->
+                if (request.periode.overlapper(ÅrMånedsperiode(periode.fom, periode.til))) {
+                    bidragPeriodeListe.add(
+                        BidragPeriode(
+                            periode = ÅrMånedsperiode(fom = periode.fom, til = periode.til),
+                            løpendeBeløp = periode.beløp ?: BigDecimal.ZERO,
+                            valutakode = periode.valutakode ?: "NOK",
+                        ),
+                    )
+                }
+            }
+            if (periodeListe.isNotEmpty()) {
+                løpendeBidragListe.add(
+                    LøpendeBidrag(
+                        sak = Saksnummer(stønad.sak),
+                        type = Stønadstype.valueOf(stønad.type),
+                        kravhaver = Personident(stønad.kravhaver),
+                        periodeListe = bidragPeriodeListe,
+                    ),
+                )
+            }
+        }
+        return LøpendeBidragPeriodeResponse(løpendeBidragListe)
+    }
+
     private fun finnOverlappPeriode(eksisterendePeriode: PeriodeBo, oppdatertStønad: OpprettStønadRequestDto): OppdatertPeriode {
         val periodeBoListe = mutableListOf<PeriodeBo>()
         val oppdatertStønadDatoFom = oppdatertStønad.periodeListe.first().periode.fom
@@ -344,7 +383,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         return OppdatertPeriode(periodeListe = periodeBoListe, oppdaterPerioder = false, settPeriodeSomUgyldig = false)
     }
 
-    fun lagNyPeriodeMedEndretFomDato(periode: PeriodeBo, nyFomDato: YearMonth): PeriodeBo = PeriodeBo(
+    private fun lagNyPeriodeMedEndretFomDato(periode: PeriodeBo, nyFomDato: YearMonth): PeriodeBo = PeriodeBo(
         periode = ÅrMånedsperiode(fom = nyFomDato, til = periode.periode.til),
         stønadsid = periode.stønadsid,
         vedtaksid = periode.vedtaksid,
@@ -354,7 +393,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         resultatkode = periode.resultatkode,
     )
 
-    fun lagNyPeriodeMedEndretTilDato(periode: PeriodeBo, nyTilDato: YearMonth): PeriodeBo = PeriodeBo(
+    private fun lagNyPeriodeMedEndretTilDato(periode: PeriodeBo, nyTilDato: YearMonth): PeriodeBo = PeriodeBo(
         periode = ÅrMånedsperiode(fom = periode.periode.fom, til = nyTilDato),
         stønadsid = periode.stønadsid,
         vedtaksid = periode.vedtaksid,
