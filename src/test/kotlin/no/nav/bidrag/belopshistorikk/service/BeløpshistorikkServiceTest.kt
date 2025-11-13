@@ -16,6 +16,7 @@ import no.nav.bidrag.domene.util.avrundetMedToDesimaler
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentEngangsbeløpRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.LøpendeBidragPeriodeRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.LøpendeBidragssakerRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadsperiodeRequestDto
@@ -1651,6 +1652,158 @@ class BeløpshistorikkServiceTest {
             { assertThat(historiskeEngangsbeløpListe.size).isEqualTo(2) },
             { assertThat(originaltEngangsbeløp.beløp).isEqualTo(BigDecimal.valueOf(5000).avrundetMedToDesimaler) },
             { assertThat(oppdatertEngangsbeløp!!.beløp).isEqualTo(BigDecimal.valueOf(6000).avrundetMedToDesimaler) },
+        )
+    }
+
+    @Test
+    @Suppress("NonAsciiCharacters")
+    fun `finnLøpendeBidragIPeriodeForSkyldner skal returnere tom respons når ingen stønad finnes for skyldner`() {
+        val periodeListe = mutableListOf<OpprettStønadsperiodeRequestDto>()
+        periodeListe.add(
+            OpprettStønadsperiodeRequestDto(
+                ÅrMånedsperiode(fom = LocalDate.of(2023, 1, 1), til = LocalDate.of(2023, 6, 1)),
+                vedtaksid = 1,
+                gyldigFra = LocalDateTime.now(),
+                gyldigTil = null,
+                periodeGjortUgyldigAvVedtaksid = null,
+                beløp = BigDecimal.valueOf(1000),
+                valutakode = "NOK",
+                resultatkode = "Alles gut",
+            ),
+        )
+
+        val opprettStønadRequest =
+            OpprettStønadRequestDto(
+                type = Stønadstype.BIDRAG,
+                sak = Saksnummer("SAK-001"),
+                skyldner = Personident("Skyldner001"),
+                kravhaver = Personident("Kravhaver001"),
+                mottaker = Personident("Mottaker001"),
+                nesteIndeksreguleringsår = 2024,
+                innkreving = Innkrevingstype.MED_INNKREVING,
+                opprettetAv = "R153961",
+                periodeListe = periodeListe,
+            )
+        beløpshistorikkService.opprettStønad(opprettStønadRequest)
+
+        val respons = beløpshistorikkService.finnLøpendeBidragIPeriodeForSkyldner(
+            LøpendeBidragPeriodeRequest(
+                skyldner = Personident("Skyldner999"),
+                periode = ÅrMånedsperiode(fom = YearMonth.of(2023, 1), til = YearMonth.of(2023, 12)),
+            ),
+        )
+
+        assertAll(
+            { assertThat(respons).isNotNull() },
+            { assertThat(respons.bidragListe).isEmpty() },
+        )
+    }
+
+    @Test
+    @Suppress("NonAsciiCharacters")
+    fun `finnLøpendeBidragIPeriodeForSkyldner skal returnere løpende bidrag for overlappende perioder`() {
+        val periodeListe = mutableListOf<OpprettStønadsperiodeRequestDto>()
+        periodeListe.add(
+            OpprettStønadsperiodeRequestDto(
+                ÅrMånedsperiode(fom = LocalDate.of(2023, 1, 1), til = LocalDate.of(2023, 6, 1)),
+                vedtaksid = 1,
+                gyldigFra = LocalDateTime.now(),
+                gyldigTil = null,
+                periodeGjortUgyldigAvVedtaksid = null,
+                beløp = BigDecimal.valueOf(1000),
+                valutakode = "NOK",
+                resultatkode = "Alles gut",
+            ),
+        )
+        periodeListe.add(
+            OpprettStønadsperiodeRequestDto(
+                ÅrMånedsperiode(fom = LocalDate.of(2024, 1, 1), til = LocalDate.of(2024, 6, 1)),
+                vedtaksid = 1,
+                gyldigFra = LocalDateTime.now(),
+                gyldigTil = null,
+                periodeGjortUgyldigAvVedtaksid = null,
+                beløp = BigDecimal.valueOf(2000),
+                valutakode = "NOK",
+                resultatkode = "Alles gut",
+            ),
+        )
+
+        val opprettStønadRequest =
+            OpprettStønadRequestDto(
+                type = Stønadstype.BIDRAG,
+                sak = Saksnummer("SAK-001"),
+                skyldner = Personident("Skyldner123"),
+                kravhaver = Personident("Kravhaver123"),
+                mottaker = Personident("Mottaker123"),
+                nesteIndeksreguleringsår = 2024,
+                innkreving = Innkrevingstype.MED_INNKREVING,
+                opprettetAv = "R153961",
+                periodeListe = periodeListe,
+            )
+        beløpshistorikkService.opprettStønad(opprettStønadRequest)
+
+        val respons = beløpshistorikkService.finnLøpendeBidragIPeriodeForSkyldner(
+            LøpendeBidragPeriodeRequest(
+                skyldner = Personident("Skyldner123"),
+                periode = ÅrMånedsperiode(fom = YearMonth.of(2023, 1), til = YearMonth.of(2023, 12)),
+            ),
+        )
+
+        assertAll(
+            { assertThat(respons).isNotNull() },
+            { assertThat(respons.bidragListe).hasSize(1) },
+            { assertThat(respons.bidragListe[0].periodeListe).hasSize(1) },
+            { assertThat(respons.bidragListe[0].periodeListe[0].periode.fom).isEqualTo(YearMonth.of(2023, 1)) },
+            { assertThat(respons.bidragListe[0].periodeListe[0].periode.til).isEqualTo(YearMonth.of(2023, 6)) },
+        )
+    }
+
+    @Test
+    @Suppress("NonAsciiCharacters")
+    fun `finnLøpendeBidragIPeriodeForSkyldner skal håndtere null beløp og valutakode`() {
+        val periodeListe = mutableListOf<OpprettStønadsperiodeRequestDto>()
+        periodeListe.add(
+            OpprettStønadsperiodeRequestDto(
+                ÅrMånedsperiode(fom = LocalDate.of(2023, 1, 1), til = LocalDate.of(2023, 6, 1)),
+                vedtaksid = 1,
+                gyldigFra = LocalDateTime.now(),
+                gyldigTil = null,
+                periodeGjortUgyldigAvVedtaksid = null,
+                beløp = null,
+                valutakode = null,
+                resultatkode = "Alles gut",
+            ),
+        )
+
+        val opprettStønadRequest =
+            OpprettStønadRequestDto(
+                type = Stønadstype.BIDRAG,
+                sak = Saksnummer("SAK-001"),
+                skyldner = Personident("Skyldner123"),
+                kravhaver = Personident("Kravhaver123"),
+                mottaker = Personident("Mottaker123"),
+                nesteIndeksreguleringsår = 2024,
+                innkreving = Innkrevingstype.MED_INNKREVING,
+                opprettetAv = "R153961",
+                periodeListe = periodeListe,
+            )
+        beløpshistorikkService.opprettStønad(opprettStønadRequest)
+
+        val respons = beløpshistorikkService.finnLøpendeBidragIPeriodeForSkyldner(
+            LøpendeBidragPeriodeRequest(
+                skyldner = Personident("Skyldner123"),
+                periode = ÅrMånedsperiode(fom = YearMonth.of(2023, 1), til = YearMonth.of(2023, 12)),
+            ),
+        )
+
+        assertAll(
+            { assertThat(respons).isNotNull() },
+            { assertThat(respons.bidragListe).hasSize(1) },
+            { assertThat(respons.bidragListe[0].periodeListe).hasSize(1) },
+            { assertThat(respons.bidragListe[0].periodeListe[0].periode.fom).isEqualTo(YearMonth.of(2023, 1)) },
+            { assertThat(respons.bidragListe[0].periodeListe[0].periode.til).isEqualTo(YearMonth.of(2023, 6)) },
+            { assertThat(respons.bidragListe[0].periodeListe[0].løpendeBeløp).isEqualTo(BigDecimal.ZERO) },
+            { assertThat(respons.bidragListe[0].periodeListe[0].valutakode).isEqualTo("NOK") },
         )
     }
 }

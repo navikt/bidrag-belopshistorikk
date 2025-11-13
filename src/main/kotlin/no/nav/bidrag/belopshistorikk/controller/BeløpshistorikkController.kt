@@ -12,8 +12,10 @@ import no.nav.bidrag.belopshistorikk.service.BeløpshistorikkService
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.LøpendeBidragPeriodeRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.LøpendeBidragssakerRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.SkyldnerStønaderRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.LøpendeBidragPeriodeResponse
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.LøpendeBidragssakerResponse
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.SkyldnerStønaderResponse
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
@@ -206,6 +208,28 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
         return ResponseEntity(stønadFunnet, HttpStatus.OK)
     }
 
+    @PostMapping(HENT_LØPENDE_STØNADER_I_PERIODE)
+    @Operation(
+        security = [SecurityRequirement(name = "bearer-key")],
+        summary = "Finn alle løpende stønader i mottatt periode tilknyttet skyldner angitt i request",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Stønader funnet"),
+        ],
+    )
+    fun hentAlleLøpendeStønaderForPeriode(
+        @NotNull @RequestBody
+        request: LøpendeBidragPeriodeRequest,
+    ): ResponseEntity<LøpendeBidragPeriodeResponse> {
+        val respons = beløpshistorikkService.finnLøpendeBidragIPeriodeForSkyldner(request)
+        LOGGER.info("Følgende stønader ble funnet: ${respons.bidragListe.map { it.sak.toString() }}")
+        secureLogger.debug {
+            "Følgende stønader ble funnet for skyldner ${request.skyldner}: ${respons.bidragListe.joinToString { it.periodeListe.toString() }}"
+        }
+        return ResponseEntity(respons, HttpStatus.OK)
+    }
+
     companion object {
         const val HENT_STØNAD = "/hent-stonad/"
         const val HENT_STØNAD_HISTORISK = "/hent-stonad-historisk/"
@@ -213,6 +237,7 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
         const val HENT_LØPENDE_BIDRAGSSAKER_FOR_SKYLDNER = "/hent-lopende-bidragssaker-for-skyldner"
         const val HENT_ALLE_STØNADER_FOR_SKYLDNER = "/hent-alle-stonader-for-skyldner"
         const val HENT_STØNAD_PERIODEBELØP = "/hent-stonad-periodebeløp/"
+        const val HENT_LØPENDE_STØNADER_I_PERIODE = "/hent-stonader-i-periode/"
         private val LOGGER = LoggerFactory.getLogger(BeløpshistorikkController::class.java)
     }
 }
