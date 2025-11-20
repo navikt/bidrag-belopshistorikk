@@ -218,7 +218,7 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
             ApiResponse(responseCode = "200", description = "Stønader funnet"),
         ],
     )
-    fun hentAlleLøpendeStønaderForPeriode(
+    fun hentAlleLøpendeStønaderIPeriode(
         @NotNull @RequestBody
         request: LøpendeBidragPeriodeRequest,
     ): ResponseEntity<LøpendeBidragPeriodeResponse> {
