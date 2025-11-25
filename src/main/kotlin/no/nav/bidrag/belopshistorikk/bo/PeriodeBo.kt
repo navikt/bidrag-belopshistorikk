@@ -54,7 +54,6 @@ fun StønadPeriodeDto.toPeriodeBo() = with(::PeriodeBo) {
             when (parameter.name) {
                 PeriodeBo::stønadsid.name -> stønadsid
                 PeriodeBo::periodeid.name -> 0
-//                PeriodeBo::periode.name -> periode
                 else -> propertiesByName[parameter.name]?.get(this@toPeriodeBo)
             }
         },
