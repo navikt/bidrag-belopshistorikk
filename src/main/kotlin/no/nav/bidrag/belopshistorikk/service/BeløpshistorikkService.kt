@@ -338,6 +338,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
                         sak = Saksnummer(stønad.sak),
                         type = Stønadstype.valueOf(stønad.type),
                         kravhaver = Personident(stønad.kravhaver),
+                        mottaker = Personident(stønad.mottaker),
                         periodeListe = bidragPeriodeListe,
                     ),
                 )
