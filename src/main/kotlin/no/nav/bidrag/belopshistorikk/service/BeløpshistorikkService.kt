@@ -202,7 +202,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
             nesteIndeksreguleringsår = nesteIndeksreguleringsår,
         )
 
-        val oppdatertStønadVedtakId = oppdatertStønad.periodeListe.first().vedtaksid
+        val oppdatertStønadVedtakId = oppdatertStønad.periodeListe.firstOrNull()?.vedtaksid ?: return
 
         eksisterendeStønad.periodeListe.forEach { periode ->
             val justertPeriode = finnOverlappPeriode(eksisterendePeriode = periode.toPeriodeBo(), oppdatertStønad = oppdatertStønad)
@@ -240,7 +240,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         stønadListe.forEach { stønad ->
             val periode =
                 persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
-                    .filter { it.fom.isBefore(request.dato.plusDays(1)) && (it.til == null || it.til.isAfter(request.dato)) }
+                    .filter { it.fom.isBefore(request.dato.plusDays(1)) && (it.til == null || it.til!!.isAfter(request.dato)) }
                     .maxByOrNull { it.fom }
             // periode er tom hvis det ikke finnes en periode for stønaden som er aktiv på angitt dato
             if (periode != null) {
