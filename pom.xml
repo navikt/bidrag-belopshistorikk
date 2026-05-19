@@ -20,7 +20,7 @@
   <properties>
 
     <!-- build/language -->
-    <kotlin.version>2.2.0</kotlin.version>
+    <kotlin.version>2.3.21</kotlin.version>
     <token-support.version>5.0.29</token-support.version>
     <!-- dependencies -->
     <bidrag-felles.version>2025.12.05.150551</bidrag-felles.version>
