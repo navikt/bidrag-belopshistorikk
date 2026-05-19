@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
   <appender name="stdout_json" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="no.nav.bidrag.commons.logging.BidragDebugLogFilter"/>
     <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
       <providers>
         <mdc/>
@@ -19,16 +20,9 @@
     </encoder>
   </appender>
 
-  <appender name="secureLog" class="ch.qos.logback.core.ConsoleAppender">
-    <layout class="ch.qos.logback.classic.PatternLayout">
-      <Pattern>
-        SECURE_LOG -- %d{yyyy-MM-dd HH:mm:ss} %X{correlationId} [%thread] %-5level %logger{70} - %msg%n
-      </Pattern>
-    </layout>
-  </appender>
-
   <springProfile name="nais">
     <appender name="team-logs" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+      <filter class="no.nav.bidrag.commons.logging.BidragDebugLogFilter"/>
       <destination>team-logs.nais-system:5170</destination>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <customFields>
@@ -57,4 +51,7 @@
   <logger name="secureLogger" level="INFO" additivity="false">
     <appender-ref ref="team-logs"/>
   </logger>
+
+  <logger name="org.hibernate.orm.connections.pooling" level="warn"/>
+
 </configuration>

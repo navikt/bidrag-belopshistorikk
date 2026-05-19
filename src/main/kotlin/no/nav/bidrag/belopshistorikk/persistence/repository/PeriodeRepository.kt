@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import java.time.LocalDateTime
 
-interface PeriodeRepository : CrudRepository<Periode, Int?> {
+interface PeriodeRepository : CrudRepository<Periode, Int> {
     @Query(
         "select pe from Periode pe where pe.stønad.stønadsid = :stønadsid and pe.periodeGjortUgyldigAvVedtaksid IS NULL order by pe.fom",
     )

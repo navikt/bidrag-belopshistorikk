@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import java.time.LocalDateTime
 
-interface EngangsbeløpRepository : CrudRepository<Engangsbeløp, Int?> {
+interface EngangsbeløpRepository : CrudRepository<Engangsbeløp, Int> {
     @Query(
         "select eb from Engangsbeløp eb where eb.type = :engangsbeløpstype and eb.skyldner in :skyldnerIdentListe " +
             "and eb.kravhaver in :kravhaverIdentListe and eb.sak = :sak and eb.referanse = :referanse and eb.gjortUgyldigAvVedtaksid is null",

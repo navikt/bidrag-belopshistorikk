@@ -34,6 +34,7 @@ import no.nav.bidrag.transport.behandling.belopshistorikk.response.SkyldnerStøn
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadMedPeriodeBeløpResponse
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
+import no.nav.bidrag.transport.felles.tilJsonString
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -50,7 +51,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     fun opprettStønad(stønadRequest: OpprettStønadRequestDto): Int {
         // TODO Sjekke skyldner/kravhaver/mottaker for nyeste ident?
         LOGGER.info { "Oppretter ny stønad for sak ${stønadRequest.sak} og type ${stønadRequest.type}" }
-        secureLogger.debug { "Oppretter ny stønad: ${tilJson(stønadRequest)}" }
+        secureLogger.debug { "Oppretter ny stønad: ${tilJsonString(stønadRequest)}" }
         val opprettetStønadId = persistenceService.opprettStønad(stønadRequest)
         stønadRequest.periodeListe.forEach { opprettPeriode(periodeRequest = it, stønadsid = opprettetStønadId) }
         return opprettetStønadId
@@ -240,7 +241,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         stønadListe.forEach { stønad ->
             val periode =
                 persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
-                    .filter { it.fom.isBefore(request.dato.plusDays(1)) && (it.til == null || it.til.isAfter(request.dato)) }
+                    .filter { it.fom.isBefore(request.dato.plusDays(1)) && (it.til == null || it.til!!.isAfter(request.dato)) }
                     .maxByOrNull { it.fom }
             // periode er tom hvis det ikke finnes en periode for stønaden som er aktiv på angitt dato
             if (periode != null) {
@@ -408,7 +409,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     fun opprettEngangsbeløp(engangsbeløpRequest: OpprettEngangsbeløpRequestDto): Int {
         // TODO Sjekke skyldner/kravhaver/mottaker for nyeste ident?
         LOGGER.info { "Oppretter nytt engangsbeløp for vedtak med id ${engangsbeløpRequest.vedtaksid}" }
-        secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJson(engangsbeløpRequest)}" }
+        secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJsonString(engangsbeløpRequest)}" }
         return persistenceService.opprettEngangsbeløp(engangsbeløpRequest)
     }
 
@@ -473,7 +474,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     ) {
         val engangsbeløpsid = eksisterendeEngangsbeløp.engangsbeløpsid
         LOGGER.info { "Setter engangsbeløp med id $engangsbeløpsid som ugyldig" }
-        secureLogger.debug { "Setter engangsbeløp som ugyldig: ${tilJson(eksisterendeEngangsbeløp)}" }
+        secureLogger.debug { "Setter engangsbeløp som ugyldig: ${tilJsonString(eksisterendeEngangsbeløp)}" }
         persistenceService.settEngangsbeløpSomUgyldig(
             engangsbeløpId = engangsbeløpsid,
             gjortUgyldigAvVedtaksid = vedtaksid,
@@ -484,7 +485,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         // TODO Bør samtidig oppdatere skyldner/kravhaver/mottaker med nyeste ident?
         if (oppdatertEngangsbeløp.beløp != null) {
             LOGGER.info { "Oppretter nytt engangsbeløp" }
-            secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJson(oppdatertEngangsbeløp)}" }
+            secureLogger.debug { "Oppretter nytt engangsbeløp: ${tilJsonString(oppdatertEngangsbeløp)}" }
             persistenceService.opprettEngangsbeløp(oppdatertEngangsbeløp)
         } else {
             // Skal ikke opprette nytt engangsbeløp hvis det er null

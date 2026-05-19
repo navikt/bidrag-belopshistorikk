@@ -1,9 +1,9 @@
 package no.nav.bidrag.belopshistorikk.aop
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.commons.CorrelationId
 import no.nav.bidrag.commons.CorrelationId.Companion.CORRELATION_ID_HEADER
+import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.After
 import org.aspectj.lang.annotation.Aspect
@@ -18,7 +18,7 @@ private val LOGGER = KotlinLogging.logger {}
 
 @Component
 @Aspect
-class HendelseCorrelationAspect(private val objectMapper: ObjectMapper) {
+class HendelseCorrelationAspect {
     @Before(value = "execution(* no.nav.bidrag.belopshistorikk.hendelse.VedtakHendelseListener.lesHendelse(..)) && args(hendelse)")
     fun leggSporingFraVedtakHendelseTilMDC(joinPoint: JoinPoint, hendelse: String) {
         hentSporingFraHendelse(hendelse)?.let {
@@ -32,7 +32,7 @@ class HendelseCorrelationAspect(private val objectMapper: ObjectMapper) {
     }
 
     private fun hentSporingFraHendelse(hendelse: String): String? = try {
-        val jsonNode = objectMapper.readTree(hendelse)
+        val jsonNode = commonObjectmapper.readTree(hendelse)
         val correlationId = jsonNode["sporingsdata"]?.get(CORRELATION_ID)?.asText()
         if (correlationId.isNullOrEmpty()) null else correlationId
     } catch (e: Exception) {

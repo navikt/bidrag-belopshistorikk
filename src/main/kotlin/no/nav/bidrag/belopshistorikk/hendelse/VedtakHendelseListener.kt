@@ -17,7 +17,7 @@ class VedtakHendelseListener(private val jsonMapperService: JsonMapperService, p
 
     @KafkaListener(
         groupId = "bidrag-belopshistorikk-8",
-        topics = ["\${TOPIC_VEDTAK}"],
+        topics = [$$"${TOPIC_VEDTAK}"],
         properties = ["auto.offset.reset=earliest"],
     )
     fun lesHendelse(

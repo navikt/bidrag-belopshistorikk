@@ -1,17 +1,15 @@
 package no.nav.bidrag.belopshistorikk.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.springframework.stereotype.Service
 
 @Service
-class JsonMapperService(private val objectMapper: ObjectMapper) {
+class JsonMapperService {
     fun mapHendelse(hendelse: String): VedtakHendelse = try {
-        objectMapper.readValue(hendelse, VedtakHendelse::class.java)
+        commonObjectmapper.readValue(hendelse, VedtakHendelse::class.java)
     } finally {
         secureLogger.debug { "Leser hendelse: $hendelse" }
     }
-
-    fun readTree(hendelse: String) = objectMapper.readTree(hendelse)
 }

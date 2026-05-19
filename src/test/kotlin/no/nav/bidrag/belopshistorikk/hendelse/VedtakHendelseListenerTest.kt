@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 
 @SpringBootTest(classes = [BidragBeløpshistorikkTest::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("VedtakHendelseListener (test av forretningslogikk)")
@@ -28,7 +28,7 @@ class VedtakHendelseListenerTest {
     @Autowired
     private lateinit var vedtakHendelseListener: VedtakHendelseListener
 
-    @MockBean
+    @MockitoBean
     private lateinit var beløpshistorikkServiceMock: BeløpshistorikkService
 
     @Test
