@@ -3,6 +3,7 @@ package no.nav.bidrag.belopshistorikk.controller
 import io.micrometer.core.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -41,6 +42,12 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
             Content(
                 mediaType = "application/json",
                 schema = Schema(implementation = HentStønadRequest::class),
+                examples = [
+                    ExampleObject(
+                        name = "Eksempel-request",
+                        value = """{ "type": "BIDRAG", "sak": "SAK-001", "skyldner": "SKYLDNER-ID", "kravhaver": "KRAVHAVER-ID" }""",
+                    ),
+                ],
             ),
         ],
     )
