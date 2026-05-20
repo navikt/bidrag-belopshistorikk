@@ -19,6 +19,9 @@ interface EngangsbeløpRepository : CrudRepository<Engangsbeløp, Int> {
         referanse: String,
     ): List<Engangsbeløp>
 
+    @Query("select eb from Engangsbeløp eb where eb.sak = :sak and eb.gjortUgyldigAvVedtaksid is null")
+    fun finnEngangsbeløpForSak(sak: String): List<Engangsbeløp>
+
     @Query(
         "select eb from Engangsbeløp eb where eb.type = :engangsbeløpstype and eb.skyldner = :skyldner and eb.kravhaver = :kravhaver " +
             "and eb.sak = :sak and eb.referanse = :referanse",

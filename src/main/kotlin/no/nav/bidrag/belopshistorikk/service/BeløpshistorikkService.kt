@@ -81,13 +81,12 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     fun hentStønad(request: HentStønadRequest): StønadDto? {
         val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
         val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
-        val stønadListe =
-            persistenceService.hentStønad(
-                stønadType = request.type.toString(),
-                skyldnerIdentListe = skyldnerIdentListe,
-                kravhaverIdentListe = kravhaverIdentListe,
-                sak = request.sak.toString(),
-            )
+        val stønadListe = persistenceService.hentStønad(
+            stønadType = request.type.toString(),
+            skyldnerIdentListe = skyldnerIdentListe,
+            kravhaverIdentListe = kravhaverIdentListe,
+            sak = request.sak.toString(),
+        )
         // TODO Bør skyldner/kravhaver/mottaker oppdateres med identUtils.hentNyesteIdent hvis det er flere identer og det ikke er den nyeste som er
         //  lagret?
         if (stønadListe.isNotEmpty()) {
@@ -138,13 +137,12 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     fun hentStønadHistorisk(request: HentStønadHistoriskRequest): StønadDto? {
         val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
         val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
-        val stønadListe =
-            persistenceService.hentStønad(
-                stønadType = request.type.toString(),
-                skyldnerIdentListe = skyldnerIdentListe,
-                kravhaverIdentListe = kravhaverIdentListe,
-                sak = request.sak.toString(),
-            )
+        val stønadListe = persistenceService.hentStønad(
+            stønadType = request.type.toString(),
+            skyldnerIdentListe = skyldnerIdentListe,
+            kravhaverIdentListe = kravhaverIdentListe,
+            sak = request.sak.toString(),
+        )
         // TODO Bør skyldner/kravhaver/mottaker oppdateres med identUtils.hentNyesteIdent hvis det er flere identer og det ikke er den nyeste som er
         //  lagret?
         if (stønadListe.isNotEmpty()) {
@@ -239,10 +237,8 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         val løpendeBidragssakListe = mutableListOf<LøpendeBidragssak>()
 
         stønadListe.forEach { stønad ->
-            val periode =
-                persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
-                    .filter { it.fom.isBefore(request.dato.plusDays(1)) && (it.til == null || it.til!!.isAfter(request.dato)) }
-                    .maxByOrNull { it.fom }
+            val periode = persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
+                .filter { it.fom.isBefore(request.dato.plusDays(1)) && (it.til == null || it.til!!.isAfter(request.dato)) }.maxByOrNull { it.fom }
             // periode er tom hvis det ikke finnes en periode for stønaden som er aktiv på angitt dato
             if (periode != null) {
                 løpendeBidragssakListe.add(
@@ -277,13 +273,12 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     fun hentStønadMedPeriodebeløp(request: HentStønadRequest): StønadMedPeriodeBeløpResponse? {
         val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
         val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
-        val stønadListe =
-            persistenceService.hentStønad(
-                stønadType = request.type.toString(),
-                skyldnerIdentListe = skyldnerIdentListe,
-                kravhaverIdentListe = kravhaverIdentListe,
-                sak = request.sak.toString(),
-            )
+        val stønadListe = persistenceService.hentStønad(
+            stønadType = request.type.toString(),
+            skyldnerIdentListe = skyldnerIdentListe,
+            kravhaverIdentListe = kravhaverIdentListe,
+            sak = request.sak.toString(),
+        )
 
         if (stønadListe.isNotEmpty()) {
             // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
@@ -320,8 +315,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
 
         stønadListe.forEach { stønad ->
             val bidragPeriodeListe = mutableListOf<BidragPeriode>()
-            val periodeListe =
-                persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
+            val periodeListe = persistenceService.hentPerioderForStønad(stønad.stønadsid!!)
             periodeListe.forEach { periode ->
                 if (request.periode.overlapper(ÅrMånedsperiode(periode.fom, periode.til))) {
                     bidragPeriodeListe.add(
@@ -356,11 +350,10 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
             if (eksisterendePeriode.periode.til == null || eksisterendePeriode.periode.til!!.isAfter(oppdatertStønadDatoFom)) {
                 // Perioden overlapper. Eksisterende periode må settes som ugyldig og ny periode opprettes med korrigert til-dato.
                 periodeBoListe.add(lagNyPeriodeMedEndretTilDato(periode = eksisterendePeriode, nyTilDato = oppdatertStønadDatoFom))
-                if (oppdatertStønadDatoTil != null &&
-                    (
-                        eksisterendePeriode.periode.til == null ||
-                            eksisterendePeriode.periode.til!!
-                                .isAfter(oppdatertStønadDatoTil)
+                if (oppdatertStønadDatoTil != null && (
+                        eksisterendePeriode.periode.til == null || eksisterendePeriode.periode.til!!.isAfter(
+                            oppdatertStønadDatoTil,
+                        )
                         )
                 ) {
                     periodeBoListe.add(lagNyPeriodeMedEndretFomDato(periode = eksisterendePeriode, nyFomDato = oppdatertStønadDatoTil))
@@ -417,14 +410,13 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
     fun hentEngangsbeløp(request: HentEngangsbeløpRequest): EngangsbeløpDto? {
         val skyldnerIdentListe = hentHistoriskeIdenter(request.skyldner)
         val kravhaverIdentListe = hentHistoriskeIdenter(request.kravhaver)
-        val engangsbeløpListe =
-            persistenceService.hentEngangsbeløp(
-                engangsbeløpType = request.type.toString(),
-                skyldnerIdentListe = skyldnerIdentListe,
-                kravhaverIdentListe = kravhaverIdentListe,
-                sak = request.sak.toString(),
-                referanse = request.referanse,
-            )
+        val engangsbeløpListe = persistenceService.hentEngangsbeløp(
+            engangsbeløpType = request.type.toString(),
+            skyldnerIdentListe = skyldnerIdentListe,
+            kravhaverIdentListe = kravhaverIdentListe,
+            sak = request.sak.toString(),
+            referanse = request.referanse,
+        )
         // TODO Bør skyldner/kravhaver oppdateres med identUtils.hentNyesteIdent hvis det er flere identer og det ikke er den nyeste som er lagret?
         if (engangsbeløpListe.isNotEmpty()) {
             // TODO Sjekk hvordan dette bør håndteres. Lage varsel i varselkanalen?
@@ -445,16 +437,17 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         }
     }
 
+    fun finnEngangsbeløpforSak(sak: Saksnummer): List<EngangsbeløpDto> = persistenceService.finnEngangsbeløpforSak(sak)
+
     // Henter historiske engangsbeløp. Brukes bare i test. Har derfor ikke implementert logikk for å sjekke mot historiske identer.
     fun hentHistoriskeEngangsbeløp(request: HentEngangsbeløpRequest): List<EngangsbeløpDto> {
-        val engangsbeløpListe =
-            persistenceService.hentHistoriskeEngangsbeløp(
-                engangsbeløpType = request.type.toString(),
-                skyldner = request.skyldner.verdi,
-                kravhaver = request.kravhaver.verdi,
-                sak = request.sak.toString(),
-                referanse = request.referanse,
-            )
+        val engangsbeløpListe = persistenceService.hentHistoriskeEngangsbeløp(
+            engangsbeløpType = request.type.toString(),
+            skyldner = request.skyldner.verdi,
+            kravhaver = request.kravhaver.verdi,
+            sak = request.sak.toString(),
+            referanse = request.referanse,
+        )
         if (engangsbeløpListe.isNotEmpty()) {
             val engangsbeløpDtoListe = mutableListOf<EngangsbeløpDto>()
             engangsbeløpListe.forEach { engangsbeløp ->

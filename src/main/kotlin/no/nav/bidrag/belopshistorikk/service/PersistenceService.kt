@@ -8,14 +8,17 @@ import no.nav.bidrag.belopshistorikk.bo.toPeriodeEntity
 import no.nav.bidrag.belopshistorikk.persistence.entity.Engangsbeløp
 import no.nav.bidrag.belopshistorikk.persistence.entity.Periode
 import no.nav.bidrag.belopshistorikk.persistence.entity.Stønad
+import no.nav.bidrag.belopshistorikk.persistence.entity.toEngangsbeløpDto
 import no.nav.bidrag.belopshistorikk.persistence.entity.toEngangsbeløpEntity
 import no.nav.bidrag.belopshistorikk.persistence.entity.toStønadEntity
 import no.nav.bidrag.belopshistorikk.persistence.repository.EngangsbeløpRepository
 import no.nav.bidrag.belopshistorikk.persistence.repository.PeriodeRepository
 import no.nav.bidrag.belopshistorikk.persistence.repository.StønadRepository
 import no.nav.bidrag.commons.util.secureLogger
+import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettEngangsbeløpRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadRequestDto
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.EngangsbeløpDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -94,6 +97,7 @@ class PersistenceService(
             sak = sak,
         )
 
+    @Timed
     fun hentStønaderForSak(sak: String): List<Stønad> = stønadRepository.finnStønaderForSak(sak)
 
     @Timed
@@ -157,6 +161,10 @@ class PersistenceService(
         sak = sak,
         referanse = referanse,
     )
+
+    @Timed
+    fun finnEngangsbeløpforSak(sak: Saksnummer): List<EngangsbeløpDto> =
+        engangsbeløpRepository.finnEngangsbeløpForSak(sak = sak.verdi).map { it.toEngangsbeløpDto() }
 
     fun endreMottakerForEngangsbeløp(engangsbeløpsid: Int, nyMottaker: String, opprettetAv: String) {
         LOGGER.info { "Oppdaterer mottaker for engangsbeløpsid $engangsbeløpsid" }

@@ -6,3 +6,5 @@ ktlint_standard_discouraged-comment-location = disabled
 
 [**/test/**/*.{kt,kts}]
 ktlint_standard_max-line-length = disabled
+ij_kotlin_name_count_to_use_star_import = 999
+ij_kotlin_name_count_to_use_star_import_for_members = 999
