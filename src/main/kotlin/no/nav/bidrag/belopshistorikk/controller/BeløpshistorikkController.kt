@@ -36,6 +36,14 @@ import org.springframework.web.bind.annotation.RestController
 class BeløpshistorikkController(private val beløpshistorikkService: BeløpshistorikkService) {
     @PostMapping(HENT_STØNAD)
     @Operation(security = [SecurityRequirement(name = "bearer-key")], summary = "Finn alle data for en stønad")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        content = [
+            Content(
+                mediaType = "application/json",
+                schema = Schema(implementation = HentStønadRequest::class),
+            ),
+        ],
+    )
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Stønad funnet"),
@@ -55,7 +63,8 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
         ],
     )
     fun hentStønad(
-        @NotNull @RequestBody
+        @NotNull
+        @RequestBody
         request: HentStønadRequest,
     ): ResponseEntity<StønadDto> {
         val stønadFunnet = beløpshistorikkService.hentStønad(request)
