@@ -1,6 +1,7 @@
 package no.nav.bidrag.belopshistorikk.service
 
 import no.nav.bidrag.belopshistorikk.BidragBeløpshistorikkTest
+import no.nav.bidrag.belopshistorikk.BidragBeløpshistorikkTest.Companion.TEST_PROFILE
 import no.nav.bidrag.belopshistorikk.TestUtil.Companion.byggEngangsbeløpRequest
 import no.nav.bidrag.belopshistorikk.TestUtil.Companion.byggEngangsbeløpRequest2
 import no.nav.bidrag.belopshistorikk.persistence.repository.EngangsbeløpRepository
@@ -27,20 +28,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.test.context.ActiveProfiles
+import org.wiremock.spring.ConfigureWireMock
+import org.wiremock.spring.EnableWireMock
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-@ActiveProfiles(BidragBeløpshistorikkTest.TEST_PROFILE)
-@SpringBootTest(
-    classes = [BidragBeløpshistorikkTest::class],
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [BidragBeløpshistorikkTest::class])
+@ActiveProfiles(TEST_PROFILE)
+@EnableWireMock(ConfigureWireMock(port = 0))
 @EnableMockOAuth2Server
-@AutoConfigureWireMock(port = 0)
 class BeløpshistorikkServiceTest {
     @Autowired
     private lateinit var periodeRepository: PeriodeRepository

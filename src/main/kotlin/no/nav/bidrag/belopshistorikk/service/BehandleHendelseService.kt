@@ -1,8 +1,5 @@
 package no.nav.bidrag.belopshistorikk.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
@@ -20,9 +17,9 @@ import no.nav.bidrag.transport.behandling.vedtak.Engangsbeløp
 import no.nav.bidrag.transport.behandling.vedtak.Periode
 import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.felles.tilJsonString
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.YearMonth
 
@@ -34,7 +31,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
     @Transactional
     fun behandleHendelse(vedtakHendelse: VedtakHendelse) {
         LOGGER.info { "Behandler vedtakHendelse med id ${vedtakHendelse.id}" }
-        secureLogger.debug { "Behandler vedtakHendelse: ${tilJson(vedtakHendelse)}" }
+        secureLogger.debug { "Behandler vedtakHendelse: ${tilJsonString(vedtakHendelse)}" }
 
         vedtakHendelse.stønadsendringListe?.forEach { stønadsendring ->
             behandleVedtakHendelseStønadsendring(
@@ -69,7 +66,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
             LOGGER.info { "Behandler stønadsendring med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid" }
             secureLogger.debug {
                 "Behandler stønadsendring med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid: " +
-                    tilJson(stønadsendring)
+                    tilJsonString(stønadsendring)
             }
             val eksisterendeStønad =
                 beløpshistorikkService.hentStønad(
@@ -85,7 +82,9 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
                     // Mottatt hendelse skal oppdatere mottaker for alle stønader i stønadsendringListe. Ingen perioder skal oppdateres.
                     LOGGER.info { "Skal oppdatere mottaker på eksisterende stønad for vedtaksid $vedtaksid" }
-                    secureLogger.debug { "Skal oppdatere mottaker på eksisterende stønad for vedtaksid $vedtaksid: ${tilJson(eksisterendeStønad)}" }
+                    secureLogger.debug {
+                        "Skal oppdatere mottaker på eksisterende stønad for vedtaksid $vedtaksid: ${tilJsonString(eksisterendeStønad)}"
+                    }
                     persistenceService.endreMottakerForStønad(
                         stønadsid = eksisterendeStønad.stønadsid,
                         nyMottaker = stønadsendring.mottaker.verdi,
@@ -94,7 +93,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
                 } else {
                     // Mottatt hendelse skal oppdatere eksisterende stønad
                     LOGGER.info { "Skal oppdatere eksisterende stønad for vedtaksid $vedtaksid" }
-                    secureLogger.debug { "Skal oppdatere eksisterende stønad for vedtaksid $vedtaksid: ${tilJson(eksisterendeStønad)}" }
+                    secureLogger.debug { "Skal oppdatere eksisterende stønad for vedtaksid $vedtaksid: ${tilJsonString(eksisterendeStønad)}" }
                     endreStønad(
                         eksisterendeStønad = eksisterendeStønad,
                         stønadsendring = stønadsendring,
@@ -108,11 +107,11 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
                     LOGGER.warn { "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid" }
                     secureLogger.warn {
-                        "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid. Stønadsendring ${tilJson(stønadsendring)}"
+                        "Mottaker forsøkt endret for stønad som ikke finnes. Vedtaksid $vedtaksid. Stønadsendring ${tilJsonString(stønadsendring)}"
                     }
                 } else {
                     LOGGER.info { "Skal opprette ny stønad for vedtaksid $vedtaksid" }
-                    secureLogger.debug { "Skal opprette ny stønad for vedtaksid $vedtaksid. Stønadsendring ${tilJson(stønadsendring)}" }
+                    secureLogger.debug { "Skal opprette ny stønad for vedtaksid $vedtaksid. Stønadsendring ${tilJsonString(stønadsendring)}" }
                     opprettStønad(
                         stønadsendring = stønadsendring,
                         vedtaksid = vedtaksid,
@@ -123,7 +122,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
             }
         } else {
             LOGGER.info { "Stønadsendring for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling" }
-            secureLogger.debug { "Stønadsendring for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling: ${tilJson(stønadsendring)}" }
+            secureLogger.debug { "Stønadsendring for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling: ${tilJsonString(stønadsendring)}" }
         }
     }
 
@@ -139,7 +138,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
             LOGGER.info { "Behandler engangsbeløp med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid" }
             secureLogger.debug {
                 "Behandler engangsbeløp med beslutningstype ENDRING og innkrevingstype MED_INNKREVING for vedtaksid $vedtaksid: " +
-                    tilJson(engangsbeløp)
+                    tilJsonString(engangsbeløp)
             }
             val eksisterendeEngangsbeløp =
                 beløpshistorikkService.hentEngangsbeløp(
@@ -157,7 +156,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
                     // Mottatt hendelse skal oppdatere mottaker for engangsbeløp
                     LOGGER.info { "Skal oppdatere mottaker på eksisterende engangsbeløp for vedtaksid $vedtaksid" }
                     secureLogger.debug {
-                        "Skal oppdatere mottaker på eksisterende engangsbeløp for vedtaksid $vedtaksid: ${tilJson(eksisterendeEngangsbeløp)}"
+                        "Skal oppdatere mottaker på eksisterende engangsbeløp for vedtaksid $vedtaksid: ${tilJsonString(eksisterendeEngangsbeløp)}"
                     }
                     persistenceService.endreMottakerForEngangsbeløp(
                         engangsbeløpsid = eksisterendeEngangsbeløp.engangsbeløpsid,
@@ -167,7 +166,9 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
                 } else {
                     // Mottatt hendelse skal oppdatere eksisterende engangsbeløp
                     LOGGER.info { "Skal oppdatere eksisterende engangsbeløp for vedtaksid $vedtaksid" }
-                    secureLogger.debug { "Skal oppdatere eksisterende engangsbeløp for vedtaksid $vedtaksid: ${tilJson(eksisterendeEngangsbeløp)}" }
+                    secureLogger.debug {
+                        "Skal oppdatere eksisterende engangsbeløp for vedtaksid $vedtaksid: ${tilJsonString(eksisterendeEngangsbeløp)}"
+                    }
                     endreEngangsbeløp(
                         eksisterendeEngangsbeløp = eksisterendeEngangsbeløp,
                         engangsbeløp = engangsbeløp,
@@ -181,7 +182,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
                 if (vedtakType == Vedtakstype.ENDRING_MOTTAKER) {
                     LOGGER.warn { "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid" }
                     secureLogger.warn {
-                        "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid. Engangsbeløp ${tilJson(engangsbeløp)}"
+                        "Mottaker forsøkt endret for engangsbeløp som ikke finnes. Vedtaksid $vedtaksid. Engangsbeløp ${tilJsonString(engangsbeløp)}"
                     }
                 } else {
                     if (engangsbeløp.beløp != null) {
@@ -197,13 +198,13 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
                     } else {
                         // Ingen engangsbeløp med beløp = null skal lagres
                         LOGGER.info { "Engangsbeløp for vedtaksid $vedtaksid er null og vil ikke bli lagret" }
-                        secureLogger.debug { "Engangsbeløp for vedtaksid $vedtaksid er null og vil ikke bli lagret: ${tilJson(engangsbeløp)}" }
+                        secureLogger.debug { "Engangsbeløp for vedtaksid $vedtaksid er null og vil ikke bli lagret: ${tilJsonString(engangsbeløp)}" }
                     }
                 }
             }
         } else {
             LOGGER.info { "Engangsbeløp for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling" }
-            secureLogger.debug { "Engangsbeløp for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling: ${tilJson(engangsbeløp)}" }
+            secureLogger.debug { "Engangsbeløp for vedtaksid $vedtaksid kvalifiserer ikke for videre behandling: ${tilJsonString(engangsbeløp)}" }
         }
     }
 
@@ -340,7 +341,7 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
             LOGGER.warn { "Periodelisten er tom (alle beløp er null). Stønad vil ikke bli opprettet for vedtaksid $vedtaksid" }
             secureLogger.warn {
                 "Periodelisten er tom (alle beløp er null). Stønad vil ikke bli opprettet for vedtaksid $vedtaksid. " +
-                    "Stønadsendring ${tilJson(stønadsendring)}"
+                    "Stønadsendring ${tilJsonString(stønadsendring)}"
             }
         }
     }
@@ -374,13 +375,4 @@ class BehandleHendelseService(private val beløpshistorikkService: Beløpshistor
     } else {
         til ?: periodeListe[i].periode.fom
     }
-}
-
-internal fun tilJson(json: Any): String {
-    val objectMapper = ObjectMapper()
-    objectMapper.registerKotlinModule()
-    objectMapper.writerWithDefaultPrettyPrinter()
-    objectMapper.registerModule(JavaTimeModule())
-    objectMapper.dateFormat = SimpleDateFormat("yyyy-MM-dd")
-    return objectMapper.writeValueAsString(json)
 }

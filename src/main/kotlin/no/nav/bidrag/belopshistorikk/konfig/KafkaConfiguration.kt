@@ -17,7 +17,7 @@ private val LOGGER = KotlinLogging.logger {}
 class KafkaConfiguration {
 
     @Bean
-    fun defaultErrorHandler(@Value("\${KAFKA_MAX_RETRY:-1}") maxRetry: Int): DefaultErrorHandler {
+    fun defaultErrorHandler(@Value($$"${KAFKA_MAX_RETRY:-1}") maxRetry: Int): DefaultErrorHandler {
         // Max retry should not be set in production
         val backoffPolicy = if (maxRetry == -1) ExponentialBackOff() else ExponentialBackOffWithMaxRetries(maxRetry)
         backoffPolicy.multiplier = 1.2
@@ -41,20 +41,20 @@ class KafkaConfiguration {
 }
 
 class KafkaRetryListener : RetryListener {
-    override fun failedDelivery(record: ConsumerRecord<*, *>, exception: Exception, deliveryAttempt: Int) {
+    override fun failedDelivery(record: ConsumerRecord<*, *>, exception: Exception?, deliveryAttempt: Int) {
         secureLogger.error(exception) {
             "Håndtering av kafka melding i topic ${record.topic()} med offset ${record.offset()} nøkkel ${record.key()} " +
                 "og innhold ${record.value()} feilet. Dette er $deliveryAttempt. forsøk"
         }
     }
 
-    override fun recovered(record: ConsumerRecord<*, *>, exception: java.lang.Exception) {
+    override fun recovered(record: ConsumerRecord<*, *>, exception: Exception?) {
         secureLogger.error(exception) {
             "Håndtering av kafka melding i topic ${record.topic()} med offset ${record.offset()} nøkkel ${record.key()} " +
                 "og innhold ${record.value()} er enten suksess eller ignorert pågrunn av ugyldig data"
         }
     }
 
-    override fun recoveryFailed(record: ConsumerRecord<*, *>, original: java.lang.Exception, failure: java.lang.Exception) {
+    override fun recoveryFailed(record: ConsumerRecord<*, *>, original: Exception?, failure: Exception) {
     }
 }

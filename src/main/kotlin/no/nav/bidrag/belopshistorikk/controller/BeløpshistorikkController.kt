@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController
 @Protected
 @Timed
 class BeløpshistorikkController(private val beløpshistorikkService: BeløpshistorikkService) {
+
     @PostMapping(HENT_STØNAD)
     @Operation(security = [SecurityRequirement(name = "bearer-key")], summary = "Finn alle data for en stønad")
     @ApiResponses(
@@ -55,7 +56,8 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
         ],
     )
     fun hentStønad(
-        @NotNull @RequestBody
+        @NotNull
+        @RequestBody
         request: HentStønadRequest,
     ): ResponseEntity<StønadDto> {
         val stønadFunnet = beløpshistorikkService.hentStønad(request)

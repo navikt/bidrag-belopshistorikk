@@ -26,20 +26,21 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
+import org.wiremock.spring.ConfigureWireMock
+import org.wiremock.spring.EnableWireMock
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@ActiveProfiles(TEST_PROFILE)
 @SpringBootTest(classes = [BidragBeløpshistorikkTest::class], webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles(TEST_PROFILE)
+@EnableWireMock(ConfigureWireMock(port = 0))
 @EnableMockOAuth2Server
-@AutoConfigureWireMock(port = 0)
 class BeløpshistorikkControllerTest {
     @Autowired
     private lateinit var securedTestRestTemplate: HttpHeaderTestRestTemplate
@@ -118,7 +119,7 @@ class BeløpshistorikkControllerTest {
         // Henter forekomst
         val response =
             securedTestRestTemplate.postForEntity<StønadDto>(
-                "/hent-stonad/",
+                "${makeFullContextPath()}/hent-stonad/",
                 byggStønadRequest(),
             )
 
@@ -181,7 +182,7 @@ class BeløpshistorikkControllerTest {
         // Henter forekomst
         val response =
             securedTestRestTemplate.postForEntity<StønadMedPeriodeBeløpResponse>(
-                "/hent-stonad-periodebeløp/",
+                "${makeFullContextPath()}/hent-stonad-periodebeløp/",
                 byggStønadRequest(),
             )
 
@@ -198,7 +199,7 @@ class BeløpshistorikkControllerTest {
 
     private fun byggStønadRequest(): HttpEntity<OpprettStønadRequestDto> = initHttpEntity(TestUtil.byggStønadRequest())
 
-    private fun <T> initHttpEntity(body: T): HttpEntity<T> {
+    private fun <T : Any> initHttpEntity(body: T): HttpEntity<T> {
         val httpHeaders = HttpHeaders()
         httpHeaders.contentType = MediaType.APPLICATION_JSON
         return HttpEntity(body, httpHeaders)

@@ -12,25 +12,25 @@ import java.time.YearMonth
 import kotlin.reflect.full.memberProperties
 
 data class PeriodeBo(
-    @Schema(description = "Periodeid")
+    @param:Schema(description = "Periodeid")
     val periodeid: Int? = null,
-    @Schema(description = "Periode med fra-og-med-dato og til-dato med format ÅÅÅÅ-MM")
+    @param:Schema(description = "Periode med fra-og-med-dato og til-dato med format ÅÅÅÅ-MM")
     val periode: ÅrMånedsperiode = ÅrMånedsperiode(YearMonth.now(), YearMonth.now()),
-    @Schema(description = "Stønadsid")
+    @param:Schema(description = "Stønadsid")
     val stønadsid: Int? = null,
-    @Schema(description = "Vedtaksid")
+    @param:Schema(description = "Vedtaksid")
     val vedtaksid: Int = 0,
-    @Schema(description = "Perioden er gyldig fra angitt tidspunkt (vedtakstidspunkt)")
+    @param:Schema(description = "Perioden er gyldig fra angitt tidspunkt (vedtakstidspunkt)")
     val gyldigFra: LocalDateTime = LocalDateTime.now(),
-    @Schema(description = "Angir tidspunkt perioden eventuelt er ugyldig fra (tidspunkt for vedtak med periode som erstattet denne)")
+    @param:Schema(description = "Angir tidspunkt perioden eventuelt er ugyldig fra (tidspunkt for vedtak med periode som erstattet denne)")
     val gyldigTil: LocalDateTime? = null,
-    @Schema(description = "Periode-gjort-ugyldig-av-vedtak-id")
+    @param:Schema(description = "Periode-gjort-ugyldig-av-vedtak-id")
     val periodeGjortUgyldigAvVedtaksid: Int? = 0,
-    @Schema(description = "Beregnet stønadsbeløp")
+    @param:Schema(description = "Beregnet stønadsbeløp")
     val beløp: BigDecimal? = BigDecimal.ZERO,
-    @Schema(description = "Valutakoden tilhørende stønadsbeløpet")
+    @param:Schema(description = "Valutakoden tilhørende stønadsbeløpet")
     val valutakode: String? = "NOK",
-    @Schema(description = "Resultatkode for stønaden")
+    @param:Schema(description = "Resultatkode for stønaden")
     val resultatkode: String = "",
 )
 
@@ -54,7 +54,6 @@ fun StønadPeriodeDto.toPeriodeBo() = with(::PeriodeBo) {
             when (parameter.name) {
                 PeriodeBo::stønadsid.name -> stønadsid
                 PeriodeBo::periodeid.name -> 0
-//                PeriodeBo::periode.name -> periode
                 else -> propertiesByName[parameter.name]?.get(this@toPeriodeBo)
             }
         },
