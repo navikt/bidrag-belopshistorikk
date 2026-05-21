@@ -1,5 +1,5 @@
 #!/bin/bash
-kubectx nais-dev
+kubectx dev-gcp
 
 deployment="deployment/bidrag-belopshistorikk-q2"
 [ "$1" == "q1" ] && deployment="deployment/bidrag-belopshistorikk-q1"

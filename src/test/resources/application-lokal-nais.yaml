@@ -1,19 +1,56 @@
 NAIS_APP_NAME: bidrag-belopshistorikk-local
+TOPIC_VEDTAK: topic.vedtak-local
+KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
 
+KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+KAFKA_GROUP_ID: bidrag-behandling
+KAFKA_BROKERS: localhost:9092
 logging.level:
   secureLogger: OFF
-
+---
 spring:
-  flyway.enabled: false
+  config.activate.on-profile: "local"
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
   datasource:
-  type: com.zaxxer.hikari.HikariDataSource
-  url: jdbc:postgresql://localhost:${DB_PORT:5454}/${DB_DATABASE:bidrag-belopshistorikk}?user=${DB_USERNAME:cloudsqliamuser}&password=${DB_PASSWORD:admin}
-  jpa.hibernate.hbmddl-auto: create-drop
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5454}/${DB_DATABASE:bidrag-belopshistorikk}?user=${DB_USERNAME:cloudsqliamuser}&password=${DB_PASSWORD:admin}&reWriteBatchedInserts=true
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      data-source-properties:
+        ssl: false
+        sslmode: disable
+        sslcert: ""
+        sslkey: ""
+        sslrootcert: ""
+  kafka:
+    properties:
+      security.protocol: PLAINTEXT
+    consumer:
+      enableAutoCommit: false
+      auto-offset-reset: earliest
 
-no.nav.security.jwt:
-  issuer:
-    aad:
-      discoveryurl: ${AZURE_APP_WELL_KNOWN_URL}
-      accepted_audience: ${AZURE_APP_CLIENT_ID}, api://${AZURE_APP_CLIENT_ID}
+---
+spring.config.activate.on-profile: "nais"
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5598}/${DB_DATABASE:bidrag-belopshistorikk-q2}?user=${DB_USERNAME}&reWriteBatchedInserts=true
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      data-source-properties:
+        ssl: false
+        sslmode: disable
+        sslcert: ""
+        sslkey: ""
+        sslrootcert: ""
+  kafka:
+    properties:
+      security.protocol: PLAINTEXT
+    consumer:
+      enableAutoCommit: false
+      auto-offset-reset: earliest
 
-server.port: 8889
+server.port: 8887
