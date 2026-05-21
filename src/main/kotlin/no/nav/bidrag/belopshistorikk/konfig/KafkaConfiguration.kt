@@ -17,7 +17,7 @@ private val LOGGER = KotlinLogging.logger {}
 class KafkaConfiguration {
 
     @Bean
-    fun defaultErrorHandler(@Value("\${KAFKA_MAX_RETRY:-1}") maxRetry: Int): DefaultErrorHandler {
+    fun defaultErrorHandler(@Value($$"${KAFKA_MAX_RETRY:-1}") maxRetry: Int): DefaultErrorHandler {
         // Max retry should not be set in production
         val backoffPolicy = if (maxRetry == -1) ExponentialBackOff() else ExponentialBackOffWithMaxRetries(maxRetry)
         backoffPolicy.multiplier = 1.2
