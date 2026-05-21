@@ -33,6 +33,6 @@ Deretter start opp BidragBeløpshistorikkLokalNais med følgende miljøvariaber
 ``DB_USERNAME=<din Nav epost>``
 
 ## Access token for swagger
-Kopier ut token fra 
-https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.bidrag.bidrag-belopshistorikk-q2
-https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.bidrag.bidrag-belopshistorikk-q1
+Kopier ut token fra:
+- q2 https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.bidrag.bidrag-belopshistorikk-q2
+- q1 https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.bidrag.bidrag-belopshistorikk-q1

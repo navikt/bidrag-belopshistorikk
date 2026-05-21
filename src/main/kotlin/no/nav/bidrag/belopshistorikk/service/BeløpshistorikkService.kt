@@ -437,7 +437,7 @@ class BeløpshistorikkService(val persistenceService: PersistenceService, privat
         }
     }
 
-    fun finnEngangsbeløpforSak(sak: Saksnummer): List<EngangsbeløpDto> = persistenceService.finnEngangsbeløpforSak(sak)
+    fun finnEngangsbeløpforSak(sak: Saksnummer): List<EngangsbeløpDto> = persistenceService.finnEngangsbeløpForSak(sak)
 
     // Henter historiske engangsbeløp. Brukes bare i test. Har derfor ikke implementert logikk for å sjekke mot historiske identer.
     fun hentHistoriskeEngangsbeløp(request: HentEngangsbeløpRequest): List<EngangsbeløpDto> {

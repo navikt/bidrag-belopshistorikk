@@ -163,7 +163,7 @@ class PersistenceService(
     )
 
     @Timed
-    fun finnEngangsbeløpforSak(sak: Saksnummer): List<EngangsbeløpDto> =
+    fun finnEngangsbeløpForSak(sak: Saksnummer): List<EngangsbeløpDto> =
         engangsbeløpRepository.finnEngangsbeløpForSak(sak = sak.verdi).map { it.toEngangsbeløpDto() }
 
     fun endreMottakerForEngangsbeløp(engangsbeløpsid: Int, nyMottaker: String, opprettetAv: String) {
