@@ -26,6 +26,6 @@ class BidragBeløpshistorikkLokalNais
 
 fun main(args: Array<String>) {
     val app = SpringApplication(BidragBeløpshistorikkLokalNais::class.java)
-    app.setAdditionalProfiles("lokal-nais", "lokal-nais-secrets")
+    app.setAdditionalProfiles("lokal-nais", "lokal-nais-secrets", "nais")
     app.run(*args)
 }
