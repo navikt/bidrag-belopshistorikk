@@ -3,7 +3,6 @@ package no.nav.bidrag.belopshistorikk.controller
 import io.micrometer.core.annotation.Timed
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
-import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -38,20 +37,6 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
 
     @PostMapping(HENT_STØNAD)
     @Operation(security = [SecurityRequirement(name = "bearer-key")], summary = "Finn alle data for en stønad")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        content = [
-            Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = HentStønadRequest::class),
-                examples = [
-                    ExampleObject(
-                        name = "Eksempel-request",
-                        value = """{ "type": "BIDRAG", "sak": "SAK-001", "skyldner": "SKYLDNER-ID", "kravhaver": "KRAVHAVER-ID" }""",
-                    ),
-                ],
-            ),
-        ],
-    )
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Stønad funnet"),
@@ -83,26 +68,6 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
 
     @PostMapping(HENT_STØNAD_HISTORISK)
     @Operation(security = [SecurityRequirement(name = "bearer-key")], summary = "Finn alle data for en stønad for angitt tidspunkt")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        content = [
-            Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = HentStønadHistoriskRequest::class),
-                examples = [
-                    ExampleObject(
-                        name = "Eksempel-request",
-                        value = """ { 
-                            "type": "BIDRAG", 
-                            "sak": "SAK-001", 
-                            "skyldner": "SKYLDNER-ID", 
-                            "kravhaver": "KRAVHAVER-ID", 
-                            "gyldigTidspunkt": "2026-05-20T12:00:00" 
-                            } """,
-                    ),
-                ],
-            ),
-        ],
-    )
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Stønad funnet"),
@@ -167,20 +132,6 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
         summary = "Finn alle løpende bidragssaker der angitt personident er skyldner." +
             "Gjelder barnebidrag, oppfostringssbidrag og 18-årsbidrag",
     )
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        content = [
-            Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = LøpendeBidragssakerRequest::class),
-                examples = [
-                    ExampleObject(
-                        name = "Eksempel-request",
-                        value = """ { "skyldner": "SKYLDNER-ID", "dato": "2026-05-20" } """,
-                    ),
-                ],
-            ),
-        ],
-    )
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Stønader funnet"),
@@ -214,20 +165,6 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
         security = [SecurityRequirement(name = "bearer-key")],
         summary = "Finn alle stønader der angitt personident er skyldner.",
     )
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        content = [
-            Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = SkyldnerStønaderRequest::class),
-                examples = [
-                    ExampleObject(
-                        name = "Eksempel-request",
-                        value = """ { "skyldner": "SKYLDNER-ID" } """,
-                    ),
-                ],
-            ),
-        ],
-    )
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Stønader funnet"),
@@ -245,20 +182,6 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
 
     @PostMapping(HENT_STØNAD_PERIODEBELØP)
     @Operation(security = [SecurityRequirement(name = "bearer-key")], summary = "Finn alle data for en stønad med historikk for perioder")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        content = [
-            Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = HentStønadRequest::class),
-                examples = [
-                    ExampleObject(
-                        name = "Eksempel-request",
-                        value = """{ "type": "BIDRAG", "sak": "SAK-001", "skyldner": "SKYLDNER-ID", "kravhaver": "KRAVHAVER-ID" }""",
-                    ),
-                ],
-            ),
-        ],
-    )
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Stønad funnet"),
@@ -291,20 +214,6 @@ class BeløpshistorikkController(private val beløpshistorikkService: Beløpshis
     @Operation(
         security = [SecurityRequirement(name = "bearer-key")],
         summary = "Finn alle løpende stønader i mottatt periode tilknyttet skyldner angitt i request",
-    )
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        content = [
-            Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = LøpendeBidragPeriodeRequest::class),
-                examples = [
-                    ExampleObject(
-                        name = "Eksempel-request",
-                        value = """{ "skyldner": "SKYLDNER-ID", "periode": { "fom": "2025-01", "til": "2025-12" } }""",
-                    ),
-                ],
-            ),
-        ],
     )
     @ApiResponses(
         value = [
