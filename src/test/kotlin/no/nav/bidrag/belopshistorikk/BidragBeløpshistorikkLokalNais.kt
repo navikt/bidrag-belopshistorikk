@@ -27,5 +27,9 @@ class BidragBeløpshistorikkLokalNais
 fun main(args: Array<String>) {
     val app = SpringApplication(BidragBeløpshistorikkLokalNais::class.java)
     app.setAdditionalProfiles("lokal-nais", "lokal-nais-secrets", "nais")
-    app.run(*args)
+    val ctx = app.run(*args)
+    val port = ctx.environment.getProperty("server.port")
+    println("##################################")
+    println("Server startet på http://localhost:$port")
+    println("##################################")
 }

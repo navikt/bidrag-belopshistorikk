@@ -4,6 +4,7 @@ import no.nav.bidrag.belopshistorikk.BidragBeløpshistorikkTest
 import no.nav.bidrag.belopshistorikk.BidragBeløpshistorikkTest.Companion.TEST_PROFILE
 import no.nav.bidrag.belopshistorikk.TestUtil
 import no.nav.bidrag.belopshistorikk.bo.toPeriodeBo
+import no.nav.bidrag.belopshistorikk.persistence.repository.EngangsbeløpRepository
 import no.nav.bidrag.belopshistorikk.persistence.repository.PeriodeRepository
 import no.nav.bidrag.belopshistorikk.persistence.repository.StønadRepository
 import no.nav.bidrag.belopshistorikk.service.PersistenceService
@@ -15,6 +16,7 @@ import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadRequestDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.OpprettStønadsperiodeRequestDto
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.EngangsbeløpDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadMedPeriodeBeløpResponse
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
@@ -52,6 +54,9 @@ class BeløpshistorikkControllerTest {
     private lateinit var stønadRepository: StønadRepository
 
     @Autowired
+    private lateinit var engangsbeløpRepository: EngangsbeløpRepository
+
+    @Autowired
     private lateinit var persistenceService: PersistenceService
 
     @LocalServerPort
@@ -62,6 +67,7 @@ class BeløpshistorikkControllerTest {
         // Sletter alle forekomster
         periodeRepository.deleteAll()
         stønadRepository.deleteAll()
+        engangsbeløpRepository.deleteAll()
     }
 
     @Test
@@ -193,6 +199,41 @@ class BeløpshistorikkControllerTest {
         )
         periodeRepository.deleteAll()
         stønadRepository.deleteAll()
+    }
+
+    @Test
+    fun `skal finne engangsbeløp for sak`() {
+        // Oppretter to engangsbeløp for SAK-001
+        persistenceService.opprettEngangsbeløp(TestUtil.byggEngangsbeløpRequest())
+        persistenceService.opprettEngangsbeløp(TestUtil.byggEngangsbeløpRequest2())
+
+        val response =
+            securedTestRestTemplate.getForEntity<List<EngangsbeløpDto>>(
+                "${makeFullContextPath()}/engangsbelop/SAK-001",
+            )
+
+        assertAll(
+            { assertThat(response).isNotNull() },
+            { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+            { assertThat(response.body).isNotNull },
+            { assertThat(response.body).hasSize(2) },
+        )
+    }
+
+    @Test
+    fun `skal returnere tom liste når ingen engangsbeløp finnes for sak`() {
+        persistenceService.opprettEngangsbeløp(TestUtil.byggEngangsbeløpRequest())
+        val response =
+            securedTestRestTemplate.getForEntity<List<EngangsbeløpDto>>(
+                "${makeFullContextPath()}/engangsbelop/SAK-999",
+            )
+
+        assertAll(
+            { assertThat(response).isNotNull() },
+            { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+            { assertThat(response.body).isNotNull },
+            { assertThat(response.body).isEmpty() },
+        )
     }
 
     private fun makeFullContextPath(): String = "http://localhost:$port"

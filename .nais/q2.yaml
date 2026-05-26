@@ -16,6 +16,12 @@ azureAccessInbound:
   - application: bidrag-automatisk-jobb-q2
     namespace: bidrag
     cluster: dev-gcp
+  - application: bidrag-ui
+    namespace: bidrag
+    cluster: dev-fss
+  - application: azure-token-generator
+    namespace: nais
+    cluster: dev-gcp
 env:
   PERSON_URL: https://bidrag-person-q2.dev-fss-pub.nais.io/bidrag-person
   PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q2
