@@ -21,7 +21,7 @@
 
     <!-- build/language -->
     <kotlin.version>2.3.21</kotlin.version>
-    <token-support.version>6.0.7</token-support.version>
+    <token-support.version>6.0.8</token-support.version>
     <!-- dependencies -->
     <bidrag-felles.version>2026.05.20.125928-SB4</bidrag-felles.version>
     <mockito-kotlin.version>6.3.0</mockito-kotlin.version>
