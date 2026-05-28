@@ -18,12 +18,17 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.wiremock.spring.ConfigureWireMock
+import org.wiremock.spring.EnableWireMock
 
 @SpringBootTest(classes = [BidragBeløpshistorikkTest::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("VedtakHendelseListener (test av forretningslogikk)")
 @ActiveProfiles(TEST_PROFILE)
 @EnableMockOAuth2Server
 @EnableAspectJAutoProxy
+@EnableWireMock(
+    ConfigureWireMock(name = "my-service", port = 0),
+)
 class VedtakHendelseListenerTest {
     @Autowired
     private lateinit var vedtakHendelseListener: VedtakHendelseListener

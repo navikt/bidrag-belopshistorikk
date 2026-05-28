@@ -1,3 +1,4 @@
+BIDRAG_PERSON_URL: http://localhost:${wiremock.server.port}/bidragperson
 NAIS_APP_NAME: bidrag-belopshistorikk-local
 TOPIC_VEDTAK: topic.vedtak-local
 KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test

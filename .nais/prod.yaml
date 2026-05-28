@@ -20,10 +20,10 @@ azureAccessInbound:
     namespace: bidrag
     cluster: prod-fss
 env:
-  PERSON_URL: https://bidrag-person.prod-fss-pub.nais.io/bidrag-person
-  PERSON_SCOPE: prod-fss.bidrag.bidrag-person
+  BIDRAG_PERSON_URL: https://bidrag-person.prod-fss-pub.nais.io/bidrag-person
+  BIDRAG_PERSON_SCOPE: prod-fss.bidrag.bidrag-person
 access-outbound:
-  PERSON_URL: bidrag-person.prod-fss-pub.nais.io
+  BIDRAG_PERSON_URL: bidrag-person.prod-fss-pub.nais.io
 spec:
   replicas:
     min: 2
