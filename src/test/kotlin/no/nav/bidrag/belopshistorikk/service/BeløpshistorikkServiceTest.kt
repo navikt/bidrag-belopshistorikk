@@ -38,7 +38,9 @@ import java.time.YearMonth
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [BidragBeløpshistorikkTest::class])
 @ActiveProfiles(TEST_PROFILE)
-@EnableWireMock(ConfigureWireMock(port = 0))
+@EnableWireMock(
+    ConfigureWireMock(name = "my-service", port = 0),
+)
 @EnableMockOAuth2Server
 class BeløpshistorikkServiceTest {
     @Autowired

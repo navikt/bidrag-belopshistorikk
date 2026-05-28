@@ -23,10 +23,10 @@ azureAccessInbound:
     namespace: nais
     cluster: dev-gcp
 env:
-  PERSON_URL: https://bidrag-person-q2.dev-fss-pub.nais.io/bidrag-person
-  PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q2
+  BIDRAG_PERSON_URL: https://bidrag-person-q2.dev-fss-pub.nais.io/bidrag-person
+  BIDRAG_PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q2
 access-outbound:
-  PERSON_URL: bidrag-person-q2.dev-fss-pub.nais.io
+  BIDRAG_PERSON_URL: bidrag-person-q2.dev-fss-pub.nais.io
 spec:
   replicas:
     min: 1

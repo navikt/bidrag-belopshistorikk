@@ -10,7 +10,7 @@
 #logging.level.org.hibernate:type=trace
 NAIS_APP_NAME: bidrag-belopshistorikk
 TOPIC_VEDTAK: topic.vedtak
-PERSON_URL: http://localhost:${wiremock.server.port}/person
+BIDRAG_PERSON_URL: http://localhost:${wiremock.server.port}/bidragperson
 KAFKA_KEYSTORE_PATH: ""
 KAFKA_TRUSTSTORE_PATH: ""
 KAFKA_CREDSTORE_PASSWORD: ""
@@ -23,7 +23,7 @@ no.nav.security.jwt:
   client:
     registration:
       bidrag-person:
-        resource-url: ${PERSON_URL}
+        resource-url: ${BIDRAG_PERSON_URL}
         token-endpoint-url: http://localhost:${mock-oauth2-server.port}/azure/token
         grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
         scope: api://org/.default

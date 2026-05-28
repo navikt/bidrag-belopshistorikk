@@ -41,7 +41,9 @@ import java.time.LocalDateTime
 
 @SpringBootTest(classes = [BidragBeløpshistorikkTest::class], webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles(TEST_PROFILE)
-@EnableWireMock(ConfigureWireMock(port = 0))
+@EnableWireMock(
+    ConfigureWireMock(name = "my-service", port = 0),
+)
 @EnableMockOAuth2Server
 class BeløpshistorikkControllerTest {
     @Autowired
