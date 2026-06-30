@@ -19,6 +19,10 @@ azureAccessInbound:
   - application: bidrag-ui
     namespace: bidrag
     cluster: prod-fss
+  - application: bidrag-frontend
+    namespace: bidrag
+    cluster: prod-gcp
+
 env:
   BIDRAG_PERSON_URL: https://bidrag-person.prod-fss-pub.nais.io/bidrag-person
   BIDRAG_PERSON_SCOPE: prod-fss.bidrag.bidrag-person

@@ -22,6 +22,12 @@ azureAccessInbound:
   - application: azure-token-generator
     namespace: nais
     cluster: dev-gcp
+  - application: bidrag-frontend-q1
+    namespace: bidrag
+    cluster: dev-gcp
+  - application: bidrag-localauth
+    namespace: bidrag
+    cluster: dev-gcp
 
 env:
   BIDRAG_PERSON_URL: https://bidrag-person-q1.dev-fss-pub.nais.io/bidrag-person
