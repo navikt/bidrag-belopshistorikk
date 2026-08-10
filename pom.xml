@@ -25,7 +25,7 @@
     <!-- dependencies -->
     <bidrag-felles.version>2026.05.22.154650-SB4</bidrag-felles.version>
     <mockito-kotlin.version>6.3.0</mockito-kotlin.version>
-    <springdoc-openapi-ui.version>3.0.3</springdoc-openapi-ui.version>
+    <springdoc-openapi-ui.version>3.1.0</springdoc-openapi-ui.version>
     <kotlin-logging-jvm.version>8.0.4</kotlin-logging-jvm.version>
     <ktlint-cli.version>1.8.0</ktlint-cli.version>
     <wiremock.version>4.2.1</wiremock.version>
