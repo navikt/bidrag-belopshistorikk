@@ -41,4 +41,5 @@ spec:
   gcp:
     sqlInstances:
       tier: db-custom-1-3840
-      diskAutoresize: true      
+      diskAutoresize: true
+      auditlog: "on"
