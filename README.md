@@ -1,5 +1,10 @@
 # Bidrag-beløpshistorikk
 
+## ⚠️ DETTE REPOET ER FLYTTET
+
+> **Dette repoet er flyttet til [navikt/bidrag-backend](https://github.com/navikt/bidrag-backend).**
+> Bruk det nye repoet for videre utvikling — dette repoet oppdateres ikke lenger.
+
 ![](https://github.com/navikt/bidrag-belopshistorikk/workflows/continuous%20integration/badge.svg)
 [![test build on pull request](https://github.com/navikt/bidrag-belopshistorikk/actions/workflows/pr.yaml/badge.svg)](https://github.com/navikt/bidrag-belopshistorikk/actions/workflows/pr.yaml)
 [![release bidrag-belopshistorikk](https://github.com/navikt/bidrag-belopshistorikk/actions/workflows/release.yaml/badge.svg)](https://github.com/navikt/bidrag-belopshistorikk/actions/workflows/release.yaml)
